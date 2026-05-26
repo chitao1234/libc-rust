@@ -91,7 +91,8 @@ pub fn generate_test(
     cfg.cpp(matches!(generator.language, Language::CXX));
 
     let stem: &str = output_file_path.file_stem().unwrap().to_str().unwrap();
-    cfg.out_dir(output_file_path.parent().unwrap()).compile(stem);
+    cfg.out_dir(output_file_path.parent().unwrap())
+        .compile(stem);
 
     Ok(output_file_path)
 }
