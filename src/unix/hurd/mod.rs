@@ -427,6 +427,23 @@ s! {
         pub __ospeed: crate::speed_t,
     }
 
+    pub struct tchars {
+        pub t_intrc: c_char,
+        pub t_quitc: c_char,
+        pub t_startc: c_char,
+        pub t_stopc: c_char,
+        pub t_eofc: c_char,
+        pub t_brkc: c_char,
+    }
+
+    pub struct sgttyb {
+        pub sg_ispeed: c_char,
+        pub sg_ospeed: c_char,
+        pub sg_erase: c_char,
+        pub sg_kill: c_char,
+        pub sg_flags: c_short,
+    }
+
     pub struct mallinfo {
         pub arena: c_int,
         pub ordblks: c_int,
@@ -1893,6 +1910,7 @@ pub const IMAXBEL: crate::tcflag_t = 8192;
 pub const IUCLC: crate::tcflag_t = 16384;
 pub const OPOST: crate::tcflag_t = 1;
 pub const ONLCR: crate::tcflag_t = 2;
+pub const OXTABS: crate::tcflag_t = 4;
 pub const ONOEOT: crate::tcflag_t = 8;
 pub const OCRNL: crate::tcflag_t = 16;
 pub const ONOCR: crate::tcflag_t = 32;
@@ -1962,6 +1980,7 @@ pub const EXTPROC: crate::tcflag_t = 2048;
 pub const _TOSTOP: crate::tcflag_t = 4194304;
 pub const TOSTOP: crate::tcflag_t = 4194304;
 pub const FLUSHO: crate::tcflag_t = 8388608;
+pub const XCASE: crate::tcflag_t = 16777216;
 pub const NOKERNINFO: crate::tcflag_t = 33554432;
 pub const PENDIN: crate::tcflag_t = 536870912;
 pub const _NOFLSH: crate::tcflag_t = 2147483648;
@@ -2034,15 +2053,31 @@ pub const TCOON: c_int = 2;
 pub const TCIOFF: c_int = 3;
 pub const TCION: c_int = 4;
 pub const TTYDEF_IFLAG: crate::tcflag_t = 11042;
+pub const TTYDEF_OFLAG: crate::tcflag_t = 7;
 pub const TTYDEF_LFLAG: crate::tcflag_t = 1483;
 pub const TTYDEF_CFLAG: crate::tcflag_t = 23040;
 pub const TTYDEF_SPEED: crate::tcflag_t = 9600;
+pub const CEOF: u8 = 4;
 pub const CEOL: u8 = 0u8;
 pub const CERASE: u8 = 127;
+pub const CINTR: u8 = 3;
+pub const CSTATUS: u8 = 20;
+pub const CKILL: u8 = 21;
 pub const CMIN: u8 = 1;
 pub const CQUIT: u8 = 28;
+pub const CSUSP: u8 = 26;
 pub const CTIME: u8 = 0;
+pub const CDSUSP: u8 = 25;
+pub const CSTART: u8 = 17;
+pub const CSTOP: u8 = 19;
+pub const CLNEXT: u8 = 22;
+pub const CDISCARD: u8 = 15;
+pub const CWERASE: u8 = 23;
+pub const CREPRINT: u8 = 18;
+pub const CEOT: u8 = 4;
 pub const CBRK: u8 = 0u8;
+pub const CRPRNT: u8 = 18;
+pub const CFLUSH: u8 = 15;
 
 // dlfcn.h
 pub const RTLD_DEFAULT: *mut c_void = ptr::null_mut();
@@ -2332,7 +2367,49 @@ pub const TIOCEXCL: c_ulong = 0x70d;
 pub const TIOCNXCL: c_ulong = 0x70e;
 pub const TIOCSCTTY: c_ulong = 0x761;
 
+pub const TIOCMODG: c_ulong = 0x60080703;
+pub const TIOCMODS: c_ulong = 0xa0080704;
+pub const TIOCFLUSH: c_ulong = 0xa0080710;
+pub const TIOCGETA: c_ulong = 0x62251713;
+pub const TIOCSETA: c_ulong = 0xa2251714;
+pub const TIOCSETAW: c_ulong = 0xa2251715;
+pub const TIOCSETAF: c_ulong = 0xa2251716;
+pub const TIOCGETD: c_ulong = 0x6008071a;
+pub const TIOCSETD: c_ulong = 0xa008071b;
+pub const TIOCSBRK: c_ulong = 0x77b;
+pub const TIOCCBRK: c_ulong = 0x77a;
+pub const TIOCSDTR: c_ulong = 0x779;
+pub const TIOCCDTR: c_ulong = 0x778;
+pub const TIOCGPGRP: c_ulong = 0x60080777;
+pub const TIOCSPGRP: c_ulong = 0xa0080776;
+pub const TIOCOUTQ: c_ulong = 0x60080773;
+pub const TIOCSTI: c_ulong = 0x80080772;
+pub const TIOCNOTTY: c_ulong = 0x771;
+pub const TIOCPKT: c_ulong = 0xa0080770;
+pub const TIOCSTOP: c_ulong = 0x76f;
+pub const TIOCSTART: c_ulong = 0x76e;
+pub const TIOCMSET: c_ulong = 0xa008076d;
+pub const TIOCMBIS: c_ulong = 0xa008076c;
+pub const TIOCMBIC: c_ulong = 0xa008076b;
+pub const TIOCMGET: c_ulong = 0x6008076a;
+pub const TIOCREMOTE: c_ulong = 0xa0080769;
+pub const TIOCUCNTL: c_ulong = 0xa0080766;
+pub const TIOCCONS: c_ulong = 0xa0080762;
+pub const TIOCEXT: c_ulong = 0xa0080760;
+pub const TIOCSIG: c_ulong = 0x75f;
+pub const TIOCDRAIN: c_ulong = 0x75e;
 pub const FIOCLEX: c_ulong = 1;
+pub const FIONCLEX: c_ulong = 0x2;
+pub const FIOASYNC: c_ulong = 0xa008007d;
+pub const FIOSETOWN: c_ulong = 0xa008007c;
+pub const FIOGETOWN: c_ulong = 0x6008007b;
+pub const OTIOCGETD: c_ulong = 0x60080700;
+pub const OTIOCSETD: c_ulong = 0xa0080701;
+pub const TIOCGETP: c_ulong = 0x44204708;
+pub const TIOCSETP: c_ulong = 0x84204709;
+pub const TIOCSETN: c_ulong = 0x8420470a;
+pub const TIOCSETC: c_ulong = 0x80300711;
+pub const TIOCGETC: c_ulong = 0x40300712;
 
 // fcntl.h
 pub const O_EXEC: c_int = 4;
