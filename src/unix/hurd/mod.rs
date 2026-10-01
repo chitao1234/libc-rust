@@ -290,6 +290,114 @@ s! {
         pub imr_sourceaddr: in_addr,
     }
 
+    pub struct group_req {
+        pub gr_interface: u32,
+        pub gr_group: crate::sockaddr_storage,
+    }
+
+    pub struct group_source_req {
+        pub gsr_interface: u32,
+        pub gsr_group: crate::sockaddr_storage,
+        pub gsr_source: crate::sockaddr_storage,
+    }
+
+    pub struct in_pktinfo {
+        pub ipi_ifindex: c_int,
+        pub ipi_spec_dst: in_addr,
+        pub ipi_addr: in_addr,
+    }
+
+    pub struct in6_pktinfo {
+        pub ipi6_addr: crate::in6_addr,
+        pub ipi6_ifindex: c_uint,
+    }
+
+    pub struct tcp_info {
+        pub tcpi_state: u8,
+        pub tcpi_ca_state: u8,
+        pub tcpi_retransmits: u8,
+        pub tcpi_probes: u8,
+        pub tcpi_backoff: u8,
+        pub tcpi_options: u8,
+        /// This contains the bitfields `tcpi_snd_wscale` and `tcpi_rcv_wscale`.
+        /// Each is 4 bits.
+        pub tcpi_snd_rcv_wscale: u8,
+
+        pub tcpi_rto: u32,
+        pub tcpi_ato: u32,
+        pub tcpi_snd_mss: u32,
+        pub tcpi_rcv_mss: u32,
+
+        pub tcpi_unacked: u32,
+        pub tcpi_sacked: u32,
+        pub tcpi_lost: u32,
+        pub tcpi_retrans: u32,
+        pub tcpi_fackets: u32,
+
+        pub tcpi_last_data_sent: u32,
+        pub tcpi_last_ack_sent: u32,
+        pub tcpi_last_data_recv: u32,
+        pub tcpi_last_ack_recv: u32,
+
+        pub tcpi_pmtu: u32,
+        pub tcpi_rcv_ssthresh: u32,
+        pub tcpi_rtt: u32,
+        pub tcpi_rttvar: u32,
+        pub tcpi_snd_ssthresh: u32,
+        pub tcpi_snd_cwnd: u32,
+        pub tcpi_advmss: u32,
+        pub tcpi_reordering: u32,
+
+        pub tcpi_rcv_rtt: u32,
+        pub tcpi_rcv_space: u32,
+
+        pub tcpi_total_retrans: u32,
+
+        pub tcpi_pacing_rate: u64,
+        pub tcpi_max_pacing_rate: u64,
+        pub tcpi_bytes_acked: u64,
+        pub tcpi_bytes_received: u64,
+        pub tcpi_segs_out: u32,
+        pub tcpi_segs_in: u32,
+
+        pub tcpi_notsent_bytes: u32,
+        pub tcpi_min_rtt: u32,
+        pub tcpi_data_segs_in: u32,
+        pub tcpi_data_segs_out: u32,
+
+        pub tcpi_delivery_rate: u64,
+
+        pub tcpi_busy_time: u64,
+        pub tcpi_rwnd_limited: u64,
+        pub tcpi_sndbuf_limited: u64,
+
+        pub tcpi_delivered: u32,
+        pub tcpi_delivered_ce: u32,
+
+        pub tcpi_bytes_sent: u64,
+        pub tcpi_bytes_retrans: u64,
+        pub tcpi_dsack_dups: u32,
+        pub tcpi_reord_seen: u32,
+
+        pub tcpi_rcv_ooopack: u32,
+        pub tcpi_snd_wnd: u32,
+        pub tcpi_rcv_wnd: u32,
+
+        pub tcpi_rehash: u32,
+        pub tcpi_total_rto: u16,
+        pub tcpi_total_rto_recoveries: u16,
+        pub tcpi_total_rto_time: u32,
+        pub tcpi_received_ce: u32,
+        pub tcpi_delivered_e1_bytes: u32,
+        pub tcpi_delivered_e0_bytes: u32,
+        pub tcpi_delivered_ce_bytes: u32,
+        pub tcpi_received_e1_bytes: u32,
+        pub tcpi_received_e0_bytes: u32,
+        pub tcpi_received_ce_bytes: u32,
+        pub tcpi_accecn_fail_mode: u16,
+        pub tcpi_accecn_opt_seen: u16,
+    }
+
     pub struct sockaddr {
         pub sa_len: c_uchar,
         pub sa_family: sa_family_t,
@@ -918,6 +1026,13 @@ s! {
         pub ar_op: u16,
     }
 
+    #[repr(packed)]
+    pub struct ethhdr {
+        pub h_dest: [c_uchar; 6usize],
+        pub h_source: [c_uchar; 6usize],
+        pub h_proto: c_ushort,
+    }
+
     pub struct arpd_request {
         pub req: c_ushort,
         pub ip: u32,
@@ -939,6 +1054,20 @@ s! {
         pub irq: c_uchar,
         pub dma: c_uchar,
         pub port: c_uchar,
+    }
+
+    pub struct ifrtreq {
+        pub ifname: [c_char; crate::IF_NAMESIZE],
+        pub rt_dest: in_addr_t,
+        pub rt_mask: in_addr_t,
+        pub rt_gateway: in_addr_t,
+        pub rt_flags: c_int,
+        pub rt_metric: c_int,
+        pub rt_mtu: c_int,
+        pub rt_window: c_int,
+        pub rt_irtt: c_int,
+        pub rt_tos: c_int,
+        pub rt_class: c_int,
     }
 
     pub struct __locale_struct {
@@ -1180,6 +1309,16 @@ s_no_extra_traits! {
     union __c_anonymous___mbstate_t___value {
         __wch: c_int,
         __wchb: [c_char; 4],
+    }
+
+    pub union __c_anonymous_ifc_ifcu {
+        pub ifcu_buf: crate::caddr_t,
+        pub ifcu_req: *mut ifreq,
+    }
+
+    pub struct ifconf {
+        pub ifc_len: c_int,
+        pub ifc_ifcu: __c_anonymous_ifc_ifcu,
     }
 
     pub union __c_anonymous_ifr_ifru {
@@ -1442,6 +1581,13 @@ pub const IP_MULTICAST_TTL: c_int = 10;
 pub const IP_MULTICAST_LOOP: c_int = 11;
 pub const IP_ADD_MEMBERSHIP: c_int = 12;
 pub const IP_DROP_MEMBERSHIP: c_int = 13;
+pub const IP_PKTINFO: c_int = 25;
+pub const IP_PMTUDISC_DONT: c_int = 0;
+pub const IP_PMTUDISC_WANT: c_int = 1;
+pub const IP_PMTUDISC_DO: c_int = 2;
+pub const IP_PMTUDISC_PROBE: c_int = 3;
+pub const IP_PMTUDISC_INTERFACE: c_int = 4;
+pub const IP_PMTUDISC_OMIT: c_int = 5;
 pub const IPV6_ADDRFORM: c_int = 1;
 pub const IPV6_2292PKTINFO: c_int = 2;
 pub const IPV6_2292HOPOPTS: c_int = 3;
@@ -1466,6 +1612,12 @@ pub const IPV6_RECVERR: c_int = 25;
 pub const IPV6_V6ONLY: c_int = 26;
 pub const IPV6_JOIN_ANYCAST: c_int = 27;
 pub const IPV6_LEAVE_ANYCAST: c_int = 28;
+pub const IPV6_PMTUDISC_DONT: c_int = 0;
+pub const IPV6_PMTUDISC_WANT: c_int = 1;
+pub const IPV6_PMTUDISC_DO: c_int = 2;
+pub const IPV6_PMTUDISC_PROBE: c_int = 3;
+pub const IPV6_PMTUDISC_INTERFACE: c_int = 4;
+pub const IPV6_PMTUDISC_OMIT: c_int = 5;
 pub const IPV6_RECVPKTINFO: c_int = 49;
 pub const IPV6_PKTINFO: c_int = 50;
 pub const IPV6_RECVHOPLIMIT: c_int = 51;
@@ -1502,7 +1654,13 @@ pub const IN_CLASSB_MAX: u32 = 65536;
 pub const IN_CLASSC_NET: u32 = 4294967040;
 pub const IN_CLASSC_NSHIFT: usize = 8;
 pub const IN_CLASSC_HOST: u32 = 255;
+pub const INADDR_DUMMY: in_addr_t = 3221225480;
 pub const IN_LOOPBACKNET: u32 = 127;
+pub const INADDR_UNSPEC_GROUP: in_addr_t = 3758096384;
+pub const INADDR_ALLHOSTS_GROUP: in_addr_t = 3758096385;
+pub const INADDR_ALLRTRS_GROUP: in_addr_t = 3758096386;
+pub const INADDR_ALLSNOOPERS_GROUP: in_addr_t = 3758096490;
+pub const INADDR_MAX_LOCAL_GROUP: in_addr_t = 3758096639;
 pub const INET_ADDRSTRLEN: usize = 16;
 pub const INET6_ADDRSTRLEN: usize = 46;
 
@@ -2403,6 +2561,33 @@ pub const FIONCLEX: c_ulong = 0x2;
 pub const FIOASYNC: c_ulong = 0xa008007d;
 pub const FIOSETOWN: c_ulong = 0xa008007c;
 pub const FIOGETOWN: c_ulong = 0x6008007b;
+pub const SIOCATMARK: c_ulong = 0x60080687;
+pub const SIOCSPGRP: c_ulong = 0xa0080688;
+pub const SIOCGPGRP: c_ulong = 0x60080689;
+pub const SIOCADDRT: c_ulong = 0x8882860a;
+pub const SIOCDELRT: c_ulong = 0x8882860b;
+pub const SIOCSIFADDR: c_ulong = 0x8084018c;
+pub const OSIOCGIFADDR: c_ulong = 0xc084018d;
+pub const SIOCGIFADDR: c_ulong = 0xc08401a1;
+pub const SIOCGIFHWADDR: c_ulong = 0xc08401a7;
+pub const SIOCSIFDSTADDR: c_ulong = 0x8084018e;
+pub const OSIOCGIFDSTADDR: c_ulong = 0xc084018f;
+pub const SIOCGIFDSTADDR: c_ulong = 0xc08401a2;
+pub const SIOCSIFFLAGS: c_ulong = 0x84804190;
+pub const SIOCGIFFLAGS: c_ulong = 0xc4804191;
+pub const OSIOCGIFBRDADDR: c_ulong = 0xc0840192;
+pub const SIOCGIFBRDADDR: c_ulong = 0xc08401a3;
+pub const SIOCSIFBRDADDR: c_ulong = 0x80840193;
+pub const OSIOCGIFNETMASK: c_ulong = 0xc0840195;
+pub const SIOCGIFNETMASK: c_ulong = 0xc08401a5;
+pub const SIOCSIFNETMASK: c_ulong = 0x80840196;
+pub const SIOCGIFMETRIC: c_ulong = 0xc8804197;
+pub const SIOCSIFMETRIC: c_ulong = 0x88804198;
+pub const SIOCDIFADDR: c_ulong = 0x80840199;
+pub const SIOCGIFMTU: c_ulong = 0xc88041b3;
+pub const SIOCSIFMTU: c_ulong = 0x888041b4;
+pub const SIOCGIFINDEX: c_ulong = 0xc88041da;
+pub const SIOCGIFNAME: c_ulong = 0xc88041db;
 pub const OTIOCGETD: c_ulong = 0x60080700;
 pub const OTIOCSETD: c_ulong = 0xa0080701;
 pub const TIOCGETP: c_ulong = 0x44204708;
@@ -2951,6 +3136,112 @@ pub const LOG_AUTHPRIV: c_int = 10 << 3;
 pub const LOG_FTP: c_int = 11 << 3;
 pub const LOG_PERROR: c_int = 0x20;
 
+// net/if_ether.h
+pub const ETH_ALEN: c_int = 6;
+pub const ETH_HLEN: c_int = 14;
+pub const ETH_ZLEN: c_int = 60;
+pub const ETH_DATA_LEN: c_int = 1500;
+pub const ETH_FRAME_LEN: c_int = 1514;
+pub const ETH_FCS_LEN: c_int = 4;
+pub const ETH_P_LOOP: c_int = 0x0060;
+pub const ETH_P_PUP: c_int = 0x0200;
+pub const ETH_P_PUPAT: c_int = 0x0201;
+pub const ETH_P_IP: c_int = 0x0800;
+pub const ETH_P_X25: c_int = 0x0805;
+pub const ETH_P_ARP: c_int = 0x0806;
+pub const ETH_P_BPQ: c_int = 0x08ff;
+pub const ETH_P_IEEEPUP: c_int = 0x0a00;
+pub const ETH_P_IEEEPUPAT: c_int = 0x0a01;
+pub const ETH_P_DEC: c_int = 0x6000;
+pub const ETH_P_DNA_DL: c_int = 0x6001;
+pub const ETH_P_DNA_RC: c_int = 0x6002;
+pub const ETH_P_DNA_RT: c_int = 0x6003;
+pub const ETH_P_LAT: c_int = 0x6004;
+pub const ETH_P_DIAG: c_int = 0x6005;
+pub const ETH_P_CUST: c_int = 0x6006;
+pub const ETH_P_SCA: c_int = 0x6007;
+pub const ETH_P_RARP: c_int = 0x8035;
+pub const ETH_P_ATALK: c_int = 0x809b;
+pub const ETH_P_AARP: c_int = 0x80f3;
+pub const ETH_P_8021Q: c_int = 0x8100;
+pub const ETH_P_IPX: c_int = 0x8137;
+pub const ETH_P_IPV6: c_int = 0x86dd;
+pub const ETH_P_PAUSE: c_int = 0x8808;
+pub const ETH_P_SLOW: c_int = 0x8809;
+pub const ETH_P_WCCP: c_int = 0x883e;
+pub const ETH_P_PPP_DISC: c_int = 0x8863;
+pub const ETH_P_PPP_SES: c_int = 0x8864;
+pub const ETH_P_MPLS_UC: c_int = 0x8847;
+pub const ETH_P_MPLS_MC: c_int = 0x8848;
+pub const ETH_P_ATMMPOA: c_int = 0x884c;
+pub const ETH_P_ATMFATE: c_int = 0x8884;
+pub const ETH_P_PAE: c_int = 0x888e;
+pub const ETH_P_AOE: c_int = 0x88a2;
+pub const ETH_P_TIPC: c_int = 0x88ca;
+pub const ETH_P_FCOE: c_int = 0x8906;
+pub const ETH_P_EDSA: c_int = 0xdada;
+pub const ETH_P_802_3: c_int = 0x0001;
+pub const ETH_P_AX25: c_int = 0x0002;
+pub const ETH_P_ALL: c_int = 0x0003;
+pub const ETH_P_802_2: c_int = 0x0004;
+pub const ETH_P_SNAP: c_int = 0x0005;
+pub const ETH_P_DDCMP: c_int = 0x0006;
+pub const ETH_P_WAN_PPP: c_int = 0x0007;
+pub const ETH_P_PPP_MP: c_int = 0x0008;
+pub const ETH_P_LOCALTALK: c_int = 0x0009;
+pub const ETH_P_CAN: c_int = 0x000c;
+pub const ETH_P_PPPTALK: c_int = 0x0010;
+pub const ETH_P_TR_802_2: c_int = 0x0011;
+pub const ETH_P_MOBITEX: c_int = 0x0015;
+pub const ETH_P_CONTROL: c_int = 0x0016;
+pub const ETH_P_IRDA: c_int = 0x0017;
+pub const ETH_P_ECONET: c_int = 0x0018;
+pub const ETH_P_HDLC: c_int = 0x0019;
+pub const ETH_P_ARCNET: c_int = 0x001a;
+pub const ETH_P_DSA: c_int = 0x001b;
+pub const ETH_P_TRAILER: c_int = 0x001c;
+pub const ETH_P_PHONET: c_int = 0x00f5;
+
+// net/route.h
+pub const RTF_UP: c_uint = 0x00000001;
+pub const RTF_GATEWAY: c_uint = 0x00000002;
+pub const RTF_HOST: c_uint = 0x00000004;
+pub const RTF_REINSTATE: c_uint = 0x00000008;
+pub const RTF_DYNAMIC: c_uint = 0x00000010;
+pub const RTF_MODIFIED: c_uint = 0x00000020;
+pub const RTF_MTU: c_uint = 0x00000040;
+pub const RTF_MSS: c_uint = 0x00000040;
+pub const RTF_WINDOW: c_uint = 0x00000080;
+pub const RTF_IRTT: c_uint = 0x00000100;
+pub const RTF_REJECT: c_uint = 0x00000200;
+pub const RTF_STATIC: c_uint = 0x00000400;
+pub const RTF_XRESOLVE: c_uint = 0x00000800;
+pub const RTF_NOFORWARD: c_uint = 0x00001000;
+pub const RTF_THROW: c_uint = 0x00002000;
+pub const RTF_NOPMTUDISC: c_uint = 0x00004000;
+pub const RTF_DEFAULT: c_uint = 0x00010000;
+pub const RTF_ALLONLINK: c_uint = 0x00020000;
+pub const RTF_ADDRCONF: c_uint = 0x00040000;
+pub const RTF_LINKRT: c_uint = 0x00100000;
+pub const RTF_NONEXTHOP: c_uint = 0x00200000;
+pub const RTF_CACHE: c_uint = 0x01000000;
+pub const RTF_FLOW: c_uint = 0x02000000;
+pub const RTF_POLICY: c_uint = 0x04000000;
+pub const RTF_LOCAL: c_uint = 0x80000000;
+pub const RTF_INTERFACE: c_uint = 0x40000000;
+pub const RTF_MULTICAST: c_uint = 0x20000000;
+pub const RTF_BROADCAST: c_uint = 0x10000000;
+pub const RTF_NAT: c_uint = 0x08000000;
+pub const RTF_ADDRCLASSMASK: c_uint = 0xf8000000;
+pub const RTMSG_NEWDEVICE: c_uint = 0x11;
+pub const RTMSG_DELDEVICE: c_uint = 0x12;
+pub const RTMSG_NEWROUTE: c_uint = 0x21;
+pub const RTMSG_DELROUTE: c_uint = 0x22;
+pub const RTMSG_NEWRULE: c_uint = 0x31;
+pub const RTMSG_DELRULE: c_uint = 0x32;
+pub const RTMSG_CONTROL: c_uint = 0x40;
+pub const RTMSG_AR_FAILED: c_uint = 0x51;
+
 // net/if.h
 pub const IFF_UP: c_int = 0x1;
 pub const IFF_BROADCAST: c_int = 0x2;
@@ -2968,6 +3259,7 @@ pub const IFF_MULTICAST: c_int = 0x1000;
 pub const IFF_PORTSEL: c_int = 0x2000;
 pub const IFF_AUTOMEDIA: c_int = 0x4000;
 pub const IFF_DYNAMIC: c_int = 0x8000;
+pub const IFHWADDRLEN: c_int = 6;
 
 // random.h
 pub const GRND_NONBLOCK: c_uint = 1;

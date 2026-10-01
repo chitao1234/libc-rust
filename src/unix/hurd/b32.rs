@@ -169,3 +169,7 @@ cfg_if! {
         }
     }
 }
+
+// bits/ioctls.h
+pub const OSIOCGIFCONF: c_ulong = 0xf0080194;
+pub const SIOCGIFCONF: c_ulong = 0xf00801a4;

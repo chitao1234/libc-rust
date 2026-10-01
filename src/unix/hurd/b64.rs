@@ -150,3 +150,7 @@ s! {
         pub __seq: c_ushort,
     }
 }
+
+// bits/ioctls.h
+pub const OSIOCGIFCONF: c_ulong = 0xc0080194;
+pub const SIOCGIFCONF: c_ulong = 0xc00801a4;
