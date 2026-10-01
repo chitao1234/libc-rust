@@ -481,6 +481,13 @@ s! {
         pub _address: u8,
     }
 
+    pub struct netent {
+        pub n_name: *mut c_char,
+        pub n_aliases: *mut *mut c_char,
+        pub n_addrtype: c_int,
+        pub n_net: u32,
+    }
+
     pub struct addrinfo {
         pub ai_flags: c_int,
         pub ai_family: c_int,
@@ -4384,13 +4391,27 @@ extern "C" {
         offset: off64_t,
     ) -> ssize_t;
 
+    pub fn preadv2(
+        fd: c_int,
+        iovec: *const iovec,
+        count: c_int,
+        offset: off_t,
+        flags: c_int,
+    ) -> ssize_t;
+
+    pub fn pwritev2(
+        fd: c_int,
+        iodev: *const iovec,
+        count: c_int,
+        offset: off_t,
+        flags: c_int,
+    ) -> ssize_t;
     pub fn fread_unlocked(
         buf: *mut c_void,
         size: size_t,
         nobj: size_t,
         stream: *mut crate::FILE,
     ) -> size_t;
-
     pub fn aio_read(aiocbp: *mut aiocb) -> c_int;
     pub fn aio_write(aiocbp: *mut aiocb) -> c_int;
     pub fn aio_fsync(op: c_int, aiocbp: *mut aiocb) -> c_int;
@@ -4401,6 +4422,7 @@ extern "C" {
         nitems: c_int,
         timeout: *const crate::timespec,
     ) -> c_int;
+
     pub fn aio_cancel(fd: c_int, aiocbp: *mut aiocb) -> c_int;
     pub fn lio_listio(
         mode: c_int,
@@ -4408,10 +4430,10 @@ extern "C" {
         nitems: c_int,
         sevp: *mut crate::sigevent,
     ) -> c_int;
-
     pub fn mq_open(name: *const c_char, oflag: c_int, ...) -> crate::mqd_t;
     pub fn mq_close(mqd: crate::mqd_t) -> c_int;
     pub fn mq_unlink(name: *const c_char) -> c_int;
+    pub fn mq_notify(mqdes: mqd_t, notification: *const sigevent) -> c_int;
     pub fn mq_receive(
         mqd: crate::mqd_t,
         msg_ptr: *mut c_char,
@@ -4431,6 +4453,7 @@ extern "C" {
         msg_len: size_t,
         msg_prio: c_uint,
     ) -> c_int;
+
     pub fn mq_timedsend(
         mqd: crate::mqd_t,
         msg_ptr: *const c_char,
@@ -4438,24 +4461,26 @@ extern "C" {
         msg_prio: c_uint,
         abs_timeout: *const crate::timespec,
     ) -> c_int;
+
     pub fn mq_getattr(mqd: crate::mqd_t, attr: *mut crate::mq_attr) -> c_int;
     pub fn mq_setattr(
         mqd: crate::mqd_t,
         newattr: *const crate::mq_attr,
         oldattr: *mut crate::mq_attr,
     ) -> c_int;
-
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn lseek64(__fd: c_int, __offset: off64_t, __whence: c_int) -> off64_t;
-
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     #[allow(clashing_extern_declarations)]
     pub fn fgetpos64(stream: *mut crate::FILE, ptr: *mut fpos64_t) -> c_int;
+
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn fseeko64(stream: *mut crate::FILE, offset: off64_t, whence: c_int) -> c_int;
+
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     #[allow(clashing_extern_declarations)]
     pub fn fsetpos64(stream: *mut crate::FILE, ptr: *const fpos64_t) -> c_int;
+
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn ftello64(stream: *mut crate::FILE) -> off64_t;
 
@@ -4476,9 +4501,17 @@ extern "C" {
     ) -> c_int;
 
     pub fn recvmsg(__fd: c_int, __message: *mut msghdr, __flags: c_int) -> ssize_t;
+    pub fn recvmmsg(
+        fd: c_int,
+        vmessages: *mut mmsghdr,
+        vlen: c_uint,
+        flags: c_int,
+        tmo: *mut timespec,
+    ) -> c_int;
 
     pub fn sendmsg(__fd: c_int, __message: *const msghdr, __flags: c_int) -> ssize_t;
 
+    pub fn sendmmsg(fd: c_int, vmessages: *mut mmsghdr, vlen: c_uint, flags: c_int) -> c_int;
     pub fn recvfrom(
         socket: c_int,
         buf: *mut c_void,
@@ -4487,20 +4520,26 @@ extern "C" {
         addr: *mut crate::sockaddr,
         addrlen: *mut crate::socklen_t,
     ) -> ssize_t;
-
     #[cfg_attr(gnu_file_offset_bits64, link_name = "sendfile64")]
     pub fn sendfile(out_fd: c_int, in_fd: c_int, offset: *mut off_t, count: size_t) -> ssize_t;
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn sendfile64(out_fd: c_int, in_fd: c_int, offset: *mut off64_t, count: size_t) -> ssize_t;
-
     pub fn shutdown(__fd: c_int, __how: c_int) -> c_int;
 
+    pub fn closefrom(lowfd: c_int);
+
+    pub fn setlogin(name: *const c_char) -> c_int;
     pub fn sethostname(name: *const c_char, len: size_t) -> c_int;
+
     pub fn getdomainname(name: *mut c_char, len: size_t) -> c_int;
+
     pub fn setdomainname(name: *const c_char, len: size_t) -> c_int;
+    pub fn vhangup() -> c_int;
+
+    pub fn revoke(file: *const c_char) -> c_int;
+    pub fn syscall(sysno: c_long, ...) -> c_long;
     pub fn if_nameindex() -> *mut if_nameindex;
     pub fn if_freenameindex(ptr: *mut if_nameindex);
-
     pub fn getnameinfo(
         sa: *const crate::sockaddr,
         salen: crate::socklen_t,
@@ -4510,27 +4549,59 @@ extern "C" {
         servlen: crate::socklen_t,
         flags: c_int,
     ) -> c_int;
+    pub fn setnetent(stay_open: c_int);
+    pub fn endnetent();
+    pub fn getnetent() -> *mut netent;
+    pub fn getnetent_r(
+        result_buf: *mut netent,
+        buf: *mut c_char,
+        buflen: size_t,
+        result: *mut *mut netent,
+        h_errnop: *mut c_int,
+    ) -> c_int;
 
+    pub fn getnetbyaddr(net: u32, type_: c_int) -> *mut netent;
+
+    pub fn getnetbyaddr_r(
+        net: u32,
+        type_: c_int,
+        result_buf: *mut netent,
+        buf: *mut c_char,
+        buflen: size_t,
+        result: *mut *mut netent,
+        h_errnop: *mut c_int,
+    ) -> c_int;
+    pub fn getnetbyname(name: *const c_char) -> *mut netent;
+    pub fn getnetbyname_r(
+        name: *const c_char,
+        result_buf: *mut netent,
+        buf: *mut c_char,
+        buflen: size_t,
+        result: *mut *mut netent,
+        h_errnop: *mut c_int,
+    ) -> c_int;
     pub fn getifaddrs(ifap: *mut *mut crate::ifaddrs) -> c_int;
-    pub fn freeifaddrs(ifa: *mut crate::ifaddrs);
 
+    pub fn freeifaddrs(ifa: *mut crate::ifaddrs);
     pub fn uname(buf: *mut crate::utsname) -> c_int;
 
     pub fn gethostid() -> c_long;
+
     pub fn sethostid(hostid: c_long) -> c_int;
 
     pub fn setpwent();
     pub fn endpwent();
     pub fn getpwent() -> *mut passwd;
+
     pub fn setgrent();
+
     pub fn endgrent();
+
     pub fn getgrent() -> *mut crate::group;
     pub fn setspent();
     pub fn endspent();
     pub fn getspent() -> *mut spwd;
-
     pub fn getspnam(name: *const c_char) -> *mut spwd;
-
     pub fn getpwent_r(
         pwd: *mut crate::passwd,
         buf: *mut c_char,
@@ -4550,6 +4621,7 @@ extern "C" {
         buflen: size_t,
         result: *mut *mut crate::passwd,
     ) -> c_int;
+
     pub fn fgetgrent_r(
         stream: *mut crate::FILE,
         grp: *mut crate::group,
@@ -4557,10 +4629,8 @@ extern "C" {
         buflen: size_t,
         result: *mut *mut crate::group,
     ) -> c_int;
-
     pub fn putpwent(p: *const crate::passwd, stream: *mut crate::FILE) -> c_int;
     pub fn putgrent(grp: *const crate::group, stream: *mut crate::FILE) -> c_int;
-
     pub fn getpwnam_r(
         name: *const c_char,
         pwd: *mut passwd,
@@ -4591,13 +4661,13 @@ extern "C" {
         buflen: size_t,
         spbufp: *mut *mut crate::spwd,
     ) -> c_int;
+
     pub fn getspent_r(
         spbuf: *mut crate::spwd,
         buf: *mut c_char,
         buflen: size_t,
         spbufp: *mut *mut crate::spwd,
     ) -> c_int;
-
     pub fn getspnam_r(
         name: *const c_char,
         spbuf: *mut spwd,
@@ -4615,14 +4685,16 @@ extern "C" {
     ) -> *mut crate::mntent;
 
     pub fn utmpname(file: *const c_char) -> c_int;
+
     pub fn utmpxname(file: *const c_char) -> c_int;
+
     pub fn getutxent() -> *mut utmpx;
     pub fn getutxid(ut: *const utmpx) -> *mut utmpx;
     pub fn getutxline(ut: *const utmpx) -> *mut utmpx;
     pub fn pututxline(ut: *const utmpx) -> *mut utmpx;
     pub fn setutxent();
-    pub fn endutxent();
 
+    pub fn endutxent();
     pub fn getresuid(
         ruid: *mut crate::uid_t,
         euid: *mut crate::uid_t,
@@ -4634,11 +4706,12 @@ extern "C" {
         sgid: *mut crate::gid_t,
     ) -> c_int;
     pub fn setresuid(ruid: crate::uid_t, euid: crate::uid_t, suid: crate::uid_t) -> c_int;
+
     pub fn setresgid(rgid: crate::gid_t, egid: crate::gid_t, sgid: crate::gid_t) -> c_int;
 
     pub fn initgroups(user: *const c_char, group: crate::gid_t) -> c_int;
-
     pub fn getgrgid(gid: crate::gid_t) -> *mut crate::group;
+
     pub fn getgrgid_r(
         gid: crate::gid_t,
         grp: *mut crate::group,
@@ -4664,31 +4737,48 @@ extern "C" {
     ) -> c_int;
 
     pub fn setgroups(ngroups: size_t, ptr: *const crate::gid_t) -> c_int;
-
     pub fn acct(filename: *const c_char) -> c_int;
 
     pub fn setmntent(filename: *const c_char, ty: *const c_char) -> *mut crate::FILE;
     pub fn getmntent(stream: *mut crate::FILE) -> *mut crate::mntent;
     pub fn addmntent(stream: *mut crate::FILE, mnt: *const crate::mntent) -> c_int;
     pub fn endmntent(streamp: *mut crate::FILE) -> c_int;
+
     pub fn hasmntopt(mnt: *const crate::mntent, opt: *const c_char) -> *mut c_char;
 
+    pub fn pthread_attr_getscope(attr: *const pthread_attr_t, contentionscope: *mut c_int)
+        -> c_int;
+    pub fn pthread_attr_setscope(attr: *mut pthread_attr_t, contentionscope: c_int) -> c_int;
+    pub fn pthread_attr_getstackaddr(
+        attr: *const pthread_attr_t,
+        stackaddr: *mut *mut c_void,
+    ) -> c_int;
+    pub fn pthread_attr_setstackaddr(attr: *mut pthread_attr_t, stackaddr: *mut c_void) -> c_int;
+    pub fn pthread_attr_getdetachstate(
+        attr: *const pthread_attr_t,
+        detachstate: *mut c_int,
+    ) -> c_int;
     pub fn pthread_create(
         native: *mut crate::pthread_t,
         attr: *const crate::pthread_attr_t,
         f: extern "C" fn(*mut c_void) -> *mut c_void,
         value: *mut c_void,
     ) -> c_int;
+    pub fn pthread_tryjoin_np(th: pthread_t, thread_return: *mut *mut c_void) -> c_int;
+    pub fn pthread_timedjoin_np(
+        th: pthread_t,
+        thread_return: *mut *mut c_void,
+        abstime: *const timespec,
+    ) -> c_int;
     pub fn pthread_kill(__threadid: crate::pthread_t, __signo: c_int) -> c_int;
     pub fn pthread_cancel(thread: crate::pthread_t) -> c_int;
     pub fn __pthread_equal(__t1: __pthread_t, __t2: __pthread_t) -> c_int;
-
     pub fn pthread_getattr_np(__thr: crate::pthread_t, __attr: *mut pthread_attr_t) -> c_int;
-
     pub fn pthread_attr_getguardsize(
         __attr: *const pthread_attr_t,
         __guardsize: *mut size_t,
     ) -> c_int;
+
     pub fn pthread_attr_setguardsize(attr: *mut crate::pthread_attr_t, guardsize: size_t) -> c_int;
 
     pub fn pthread_attr_getstack(
@@ -4696,18 +4786,15 @@ extern "C" {
         __stackaddr: *mut *mut c_void,
         __stacksize: *mut size_t,
     ) -> c_int;
-
     pub fn pthread_mutexattr_getpshared(
         attr: *const pthread_mutexattr_t,
         pshared: *mut c_int,
     ) -> c_int;
     pub fn pthread_mutexattr_setpshared(attr: *mut pthread_mutexattr_t, pshared: c_int) -> c_int;
-
     pub fn pthread_mutex_timedlock(
         lock: *mut pthread_mutex_t,
         abstime: *const crate::timespec,
     ) -> c_int;
-
     pub fn pthread_rwlockattr_getpshared(
         attr: *const pthread_rwlockattr_t,
         val: *mut c_int,
@@ -4718,6 +4805,7 @@ extern "C" {
         attr: *const pthread_condattr_t,
         clock_id: *mut clockid_t,
     ) -> c_int;
+
     pub fn pthread_condattr_setclock(
         __attr: *mut pthread_condattr_t,
         __clock_id: __clockid_t,
@@ -4727,7 +4815,6 @@ extern "C" {
         pshared: *mut c_int,
     ) -> c_int;
     pub fn pthread_condattr_setpshared(attr: *mut pthread_condattr_t, pshared: c_int) -> c_int;
-
     pub fn pthread_once(control: *mut pthread_once_t, routine: extern "C" fn()) -> c_int;
 
     pub fn pthread_barrierattr_init(attr: *mut crate::pthread_barrierattr_t) -> c_int;
@@ -4740,38 +4827,51 @@ extern "C" {
         attr: *mut crate::pthread_barrierattr_t,
         shared: c_int,
     ) -> c_int;
+
     pub fn pthread_barrier_init(
         barrier: *mut pthread_barrier_t,
         attr: *const crate::pthread_barrierattr_t,
         count: c_uint,
     ) -> c_int;
+
     pub fn pthread_barrier_destroy(barrier: *mut pthread_barrier_t) -> c_int;
     pub fn pthread_barrier_wait(barrier: *mut pthread_barrier_t) -> c_int;
+
     pub fn pthread_spin_init(lock: *mut crate::pthread_spinlock_t, pshared: c_int) -> c_int;
     pub fn pthread_spin_destroy(lock: *mut crate::pthread_spinlock_t) -> c_int;
+
     pub fn pthread_spin_lock(lock: *mut crate::pthread_spinlock_t) -> c_int;
     pub fn pthread_spin_trylock(lock: *mut crate::pthread_spinlock_t) -> c_int;
+
     pub fn pthread_spin_unlock(lock: *mut crate::pthread_spinlock_t) -> c_int;
     pub fn pthread_atfork(
         prepare: Option<unsafe extern "C" fn()>,
         parent: Option<unsafe extern "C" fn()>,
         child: Option<unsafe extern "C" fn()>,
     ) -> c_int;
-
     pub fn pthread_sigmask(
         __how: c_int,
         __newmask: *const __sigset_t,
         __oldmask: *mut __sigset_t,
     ) -> c_int;
-
     pub fn sched_getparam(pid: crate::pid_t, param: *mut crate::sched_param) -> c_int;
     pub fn sched_setparam(pid: crate::pid_t, param: *const crate::sched_param) -> c_int;
+
     pub fn sched_getscheduler(pid: crate::pid_t) -> c_int;
+
     pub fn sched_setscheduler(
         pid: crate::pid_t,
         policy: c_int,
         param: *const crate::sched_param,
     ) -> c_int;
+
+    pub fn sched_get_priority_max(algorithm: c_int) -> c_int;
+
+    pub fn sched_get_priority_min(algorithm: c_int) -> c_int;
+    pub fn sched_rr_get_interval(pid: pid_t, t: *mut timespec) -> c_int;
+
+    pub fn sched_setaffinity(pid: pid_t, cpusetsize: size_t, cpuset: *const cpu_set_t) -> c_int;
+
     pub fn pthread_getschedparam(
         native: crate::pthread_t,
         policy: *mut c_int,
@@ -4782,17 +4882,35 @@ extern "C" {
         policy: c_int,
         param: *const crate::sched_param,
     ) -> c_int;
-
     pub fn pthread_getcpuclockid(thread: crate::pthread_t, clk_id: *mut crate::clockid_t) -> c_int;
+    pub fn pthread_getname_np(thread: pthread_t, buf: *mut c_char, buflen: size_t) -> c_int;
+
+    pub fn pthread_rwlockattr_getkind_np(
+        attr: *const pthread_rwlockattr_t,
+        pref: *mut c_int,
+    ) -> c_int;
+    pub fn pthread_rwlockattr_setkind_np(attr: *mut pthread_rwlockattr_t, pref: c_int) -> c_int;
+
+    pub fn pthread_setname_np(thread: pthread_t, name: *const c_char) -> c_int;
+
+    pub fn pthread_sigqueue(threadid: pthread_t, signo: c_int, value: crate::sigval) -> c_int;
 
     pub fn sem_init(sem: *mut sem_t, pshared: c_int, value: c_uint) -> c_int;
     pub fn sem_destroy(sem: *mut sem_t) -> c_int;
+
+    pub fn sem_open(name: *const c_char, oflag: c_int, ...) -> *mut sem_t;
+
+    pub fn sem_close(sem: *mut sem_t) -> c_int;
+    pub fn sem_unlink(name: *const c_char) -> c_int;
     pub fn sem_timedwait(sem: *mut sem_t, abstime: *const crate::timespec) -> c_int;
     pub fn sem_getvalue(sem: *mut sem_t, sval: *mut c_int) -> c_int;
 
     pub fn clock_getres(__clock_id: clockid_t, __res: *mut crate::timespec) -> c_int;
+
     pub fn clock_gettime(__clock_id: clockid_t, __tp: *mut crate::timespec) -> c_int;
+
     pub fn clock_settime(__clock_id: clockid_t, __tp: *const crate::timespec) -> c_int;
+
     pub fn clock_getcpuclockid(pid: crate::pid_t, clk_id: *mut crate::clockid_t) -> c_int;
 
     pub fn clock_nanosleep(
@@ -4804,18 +4922,30 @@ extern "C" {
 
     pub fn gettimeofday(tp: *mut crate::timeval, tz: *mut crate::timezone) -> c_int;
     pub fn settimeofday(tv: *const crate::timeval, tz: *const crate::timezone) -> c_int;
+    pub fn asctime(tp: *const tm) -> *mut c_char;
+
+    pub fn ctime(timer: *const time_t) -> *mut c_char;
 
     pub fn asctime_r(tm: *const crate::tm, buf: *mut c_char) -> *mut c_char;
-    pub fn ctime_r(timep: *const time_t, buf: *mut c_char) -> *mut c_char;
 
+    pub fn ctime_r(timep: *const time_t, buf: *mut c_char) -> *mut c_char;
     pub fn strftime(
         s: *mut c_char,
         max: size_t,
         format: *const c_char,
         tm: *const crate::tm,
     ) -> size_t;
-    pub fn strptime(s: *const c_char, format: *const c_char, tm: *mut crate::tm) -> *mut c_char;
+    pub fn strftime_l(
+        s: *mut c_char,
+        maxsize: size_t,
+        format: *const c_char,
+        tp: *const tm,
+        loc: locale_t,
+    ) -> size_t;
 
+    pub fn getdate(string: *const c_char) -> *mut tm;
+
+    pub fn strptime(s: *const c_char, format: *const c_char, tm: *mut crate::tm) -> *mut c_char;
     pub fn timer_create(
         clockid: crate::clockid_t,
         sevp: *mut crate::sigevent,
@@ -4830,10 +4960,8 @@ extern "C" {
         new_value: *const crate::itimerspec,
         old_value: *mut crate::itimerspec,
     ) -> c_int;
-
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn fstat64(__fd: c_int, __buf: *mut stat64) -> c_int;
-
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn fstatat64(
         __fd: c_int,
@@ -4841,7 +4969,9 @@ extern "C" {
         __buf: *mut stat64,
         __flag: c_int,
     ) -> c_int;
-
+    pub fn chflags(file: *const c_char, flags: c_ulong) -> c_int;
+    pub fn fchflags(fd: c_int, flags: c_ulong) -> c_int;
+    pub fn lchmod(file: *const c_char, mode: mode_t) -> c_int;
     pub fn statx(
         dirfd: c_int,
         pathname: *const c_char,
@@ -4849,24 +4979,21 @@ extern "C" {
         mask: c_uint,
         statxbuf: *mut statx,
     ) -> c_int;
-
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn ftruncate64(__fd: c_int, __length: off64_t) -> c_int;
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn truncate64(__file: *const c_char, __length: off64_t) -> c_int;
-
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn lstat64(__file: *const c_char, __buf: *mut stat64) -> c_int;
-
     #[cfg_attr(gnu_file_offset_bits64, link_name = "statfs64")]
     pub fn statfs(path: *const c_char, buf: *mut statfs) -> c_int;
+
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn statfs64(__file: *const c_char, __buf: *mut statfs64) -> c_int;
     #[cfg_attr(gnu_file_offset_bits64, link_name = "fstatfs64")]
     pub fn fstatfs(fd: c_int, buf: *mut statfs) -> c_int;
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn fstatfs64(__fildes: c_int, __buf: *mut statfs64) -> c_int;
-
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn statvfs64(__file: *const c_char, __buf: *mut statvfs64) -> c_int;
     // FIXME(1.0,deprecate,64): lfs binding to be removed
@@ -4874,10 +5001,8 @@ extern "C" {
 
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn open64(__file: *const c_char, __oflag: c_int, ...) -> c_int;
-
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn openat64(__fd: c_int, __file: *const c_char, __oflag: c_int, ...) -> c_int;
-
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn fopen64(filename: *const c_char, mode: *const c_char) -> *mut crate::FILE;
     // FIXME(1.0,deprecate,64): lfs binding to be removed
@@ -4889,20 +5014,26 @@ extern "C" {
 
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn creat64(path: *const c_char, mode: mode_t) -> c_int;
-
     pub fn mkostemp(template: *mut c_char, flags: c_int) -> c_int;
+
     pub fn mkostemps(template: *mut c_char, suffixlen: c_int, flags: c_int) -> c_int;
     pub fn mkstemps(template: *mut c_char, suffixlen: c_int) -> c_int;
+
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn tmpfile64() -> *mut crate::FILE;
 
+    pub fn renameat2(
+        oldfd: c_int,
+        old: *const c_char,
+        newfd: c_int,
+        new: *const c_char,
+        flags: c_uint,
+    ) -> c_int;
+
     pub fn popen(command: *const c_char, mode: *const c_char) -> *mut crate::FILE;
-
     pub fn getdtablesize() -> c_int;
-
     // Added in `glibc` 2.34
     pub fn close_range(first: c_uint, last: c_uint, flags: c_int) -> c_int;
-
     pub fn openpty(
         __amaster: *mut c_int,
         __aslave: *mut c_int,
@@ -4919,7 +5050,9 @@ extern "C" {
     ) -> crate::pid_t;
 
     pub fn getpt() -> c_int;
+
     pub fn ptsname_r(fd: c_int, buf: *mut c_char, buflen: size_t) -> c_int;
+
     pub fn login_tty(fd: c_int) -> c_int;
 
     pub fn ctermid(s: *mut c_char) -> *mut c_char;
@@ -4939,7 +5072,6 @@ extern "C" {
         envp: *const *mut c_char,
     ) -> c_int;
     pub fn fexecve(fd: c_int, argv: *const *mut c_char, envp: *const *mut c_char) -> c_int;
-
     pub fn daemon(nochdir: c_int, noclose: c_int) -> c_int;
 
     // posix/spawn.h
@@ -4960,19 +5092,24 @@ extern "C" {
         envp: *const *mut c_char,
     ) -> c_int;
     pub fn posix_spawnattr_init(attr: *mut posix_spawnattr_t) -> c_int;
+
     pub fn posix_spawnattr_destroy(attr: *mut posix_spawnattr_t) -> c_int;
+
     pub fn posix_spawnattr_getsigdefault(
         attr: *const posix_spawnattr_t,
         default: *mut crate::sigset_t,
     ) -> c_int;
+
     pub fn posix_spawnattr_setsigdefault(
         attr: *mut posix_spawnattr_t,
         default: *const crate::sigset_t,
     ) -> c_int;
+
     pub fn posix_spawnattr_getsigmask(
         attr: *const posix_spawnattr_t,
         default: *mut crate::sigset_t,
     ) -> c_int;
+
     pub fn posix_spawnattr_setsigmask(
         attr: *mut posix_spawnattr_t,
         default: *const crate::sigset_t,
@@ -4983,23 +5120,26 @@ extern "C" {
         attr: *const posix_spawnattr_t,
         flags: *mut crate::pid_t,
     ) -> c_int;
+
     pub fn posix_spawnattr_setpgroup(attr: *mut posix_spawnattr_t, flags: crate::pid_t) -> c_int;
     pub fn posix_spawnattr_getschedpolicy(
         attr: *const posix_spawnattr_t,
         flags: *mut c_int,
     ) -> c_int;
+
     pub fn posix_spawnattr_setschedpolicy(attr: *mut posix_spawnattr_t, flags: c_int) -> c_int;
     pub fn posix_spawnattr_getschedparam(
         attr: *const posix_spawnattr_t,
         param: *mut crate::sched_param,
     ) -> c_int;
+
     pub fn posix_spawnattr_setschedparam(
         attr: *mut posix_spawnattr_t,
         param: *const crate::sched_param,
     ) -> c_int;
-
     pub fn posix_spawn_file_actions_init(actions: *mut posix_spawn_file_actions_t) -> c_int;
     pub fn posix_spawn_file_actions_destroy(actions: *mut posix_spawn_file_actions_t) -> c_int;
+
     pub fn posix_spawn_file_actions_addopen(
         actions: *mut posix_spawn_file_actions_t,
         fd: c_int,
@@ -5016,12 +5156,12 @@ extern "C" {
         fd: c_int,
         newfd: c_int,
     ) -> c_int;
-
     // Added in `glibc` 2.29
     pub fn posix_spawn_file_actions_addchdir_np(
         actions: *mut crate::posix_spawn_file_actions_t,
         path: *const c_char,
     ) -> c_int;
+
     // Added in `glibc` 2.29
     pub fn posix_spawn_file_actions_addfchdir_np(
         actions: *mut crate::posix_spawn_file_actions_t,
@@ -5037,20 +5177,17 @@ extern "C" {
         actions: *mut crate::posix_spawn_file_actions_t,
         tcfd: c_int,
     ) -> c_int;
-
     pub fn shm_open(name: *const c_char, oflag: c_int, mode: mode_t) -> c_int;
     pub fn shm_unlink(name: *const c_char) -> c_int;
-
     pub fn euidaccess(pathname: *const c_char, mode: c_int) -> c_int;
     pub fn eaccess(pathname: *const c_char, mode: c_int) -> c_int;
-
     pub fn faccessat(dirfd: c_int, pathname: *const c_char, mode: c_int, flags: c_int) -> c_int;
-
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn stat64(__file: *const c_char, __buf: *mut stat64) -> c_int;
 
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn readdir64(dirp: *mut crate::DIR) -> *mut dirent64;
+
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn readdir64_r(
         dirp: *mut crate::DIR,
@@ -5058,15 +5195,13 @@ extern "C" {
         result: *mut *mut dirent64,
     ) -> c_int;
     pub fn seekdir(dirp: *mut crate::DIR, loc: c_long);
-    pub fn telldir(dirp: *mut crate::DIR) -> c_long;
 
+    pub fn telldir(dirp: *mut crate::DIR) -> c_long;
     pub fn dirfd(dirp: *mut crate::DIR) -> c_int;
 
     #[link_name = "__xpg_strerror_r"]
     pub fn strerror_r(__errnum: c_int, __buf: *mut c_char, __buflen: size_t) -> c_int;
-
     pub fn __errno_location() -> *mut c_int;
-
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn mmap64(
         __addr: *mut c_void,
@@ -5076,7 +5211,7 @@ extern "C" {
         __fd: c_int,
         __offset: off64_t,
     ) -> *mut c_void;
-
+    pub fn mincore(start: *mut c_void, len: size_t, vec: *mut c_uchar) -> c_int;
     pub fn mremap(
         addr: *mut c_void,
         len: size_t,
@@ -5085,129 +5220,33 @@ extern "C" {
         ...
     ) -> *mut c_void;
 
+    pub fn remap_file_pages(
+        start: *mut c_void,
+        size: size_t,
+        prot: c_int,
+        pgoff: size_t,
+        flags: c_int,
+    ) -> c_int;
     pub fn mprotect(__addr: *mut c_void, __len: size_t, __prot: c_int) -> c_int;
-
     pub fn msync(__addr: *mut c_void, __len: size_t, __flags: c_int) -> c_int;
+
     pub fn sync();
+
     pub fn syncfs(fd: c_int) -> c_int;
+
     pub fn fdatasync(fd: c_int) -> c_int;
 
     #[deprecated(since = "0.2.187", note = "This routine doesn't exist upstream.")]
     pub fn fallocate64(fd: c_int, mode: c_int, offset: off64_t, len: off64_t) -> c_int;
+
     #[cfg_attr(gnu_file_offset_bits64, link_name = "posix_fallocate64")]
     pub fn posix_fallocate(fd: c_int, offset: off_t, len: off_t) -> c_int;
+
     // FIXME(1.0,deprecate,64): lfs binding to be removed
     pub fn posix_fallocate64(fd: c_int, offset: off64_t, len: off64_t) -> c_int;
 
     #[cfg_attr(gnu_file_offset_bits64, link_name = "posix_fadvise64")]
     pub fn posix_fadvise(fd: c_int, offset: off_t, len: off_t, advise: c_int) -> c_int;
-
-    // FIXME(1.0,deprecate,64): lfs binding to be removed
-    pub fn posix_fadvise64(fd: c_int, offset: off64_t, len: off64_t, advise: c_int) -> c_int;
-
-    pub fn madvise(__addr: *mut c_void, __len: size_t, __advice: c_int) -> c_int;
-
-    pub fn posix_madvise(addr: *mut c_void, len: size_t, advice: c_int) -> c_int;
-
-    #[cfg_attr(gnu_file_offset_bits64, link_name = "getrlimit64")]
-    pub fn getrlimit(resource: __rlimit_resource_t, rlim: *mut crate::rlimit) -> c_int;
-    // FIXME(1.0,deprecate,64): lfs binding to be removed
-    pub fn getrlimit64(resource: __rlimit_resource_t, rlim: *mut rlimit64) -> c_int;
-    #[cfg_attr(gnu_file_offset_bits64, link_name = "setrlimit64")]
-    pub fn setrlimit(resource: __rlimit_resource_t, rlim: *const crate::rlimit) -> c_int;
-    // FIXME(1.0,deprecate,64): lfs binding to be removed
-    pub fn setrlimit64(resource: __rlimit_resource_t, rlim: *const rlimit64) -> c_int;
-
-    pub fn getpriority(which: crate::__priority_which, who: crate::id_t) -> c_int;
-    pub fn setpriority(which: crate::__priority_which, who: crate::id_t, prio: c_int) -> c_int;
-
-    pub fn getrandom(__buffer: *mut c_void, __length: size_t, __flags: c_uint) -> ssize_t;
-    pub fn getentropy(__buffer: *mut c_void, __length: size_t) -> c_int;
-
-    pub fn memrchr(cx: *const c_void, c: c_int, n: size_t) -> *mut c_void;
-    pub fn memmem(
-        haystack: *const c_void,
-        haystacklen: size_t,
-        needle: *const c_void,
-        needlelen: size_t,
-    ) -> *mut c_void;
-    pub fn strchrnul(s: *const c_char, c: c_int) -> *mut c_char;
-
-    pub fn abs(i: c_int) -> c_int;
-    pub fn labs(i: c_long) -> c_long;
-    pub fn rand() -> c_int;
-    pub fn srand(seed: c_uint);
-
-    pub fn drand48() -> c_double;
-    pub fn erand48(xseed: *mut c_ushort) -> c_double;
-    pub fn lrand48() -> c_long;
-    pub fn nrand48(xseed: *mut c_ushort) -> c_long;
-    pub fn mrand48() -> c_long;
-    pub fn jrand48(xseed: *mut c_ushort) -> c_long;
-    pub fn srand48(seed: c_long);
-    pub fn seed48(xseed: *mut c_ushort) -> *mut c_ushort;
-    pub fn lcong48(p: *mut c_ushort);
-
-    pub fn qsort_r(
-        base: *mut c_void,
-        num: size_t,
-        size: size_t,
-        compar: Option<unsafe extern "C" fn(*const c_void, *const c_void, *mut c_void) -> c_int>,
-        arg: *mut c_void,
-    );
-
-    pub fn brk(addr: *mut c_void) -> c_int;
-    pub fn sbrk(increment: intptr_t) -> *mut c_void;
-
-    pub fn memalign(align: size_t, size: size_t) -> *mut c_void;
-    pub fn mallopt(param: c_int, value: c_int) -> c_int;
-
-    pub fn mallinfo() -> crate::mallinfo;
-    pub fn mallinfo2() -> crate::mallinfo2;
-    pub fn malloc_info(options: c_int, stream: *mut crate::FILE) -> c_int;
-    pub fn malloc_usable_size(ptr: *mut c_void) -> size_t;
-    pub fn malloc_trim(__pad: size_t) -> c_int;
-
-    pub fn iconv_open(tocode: *const c_char, fromcode: *const c_char) -> iconv_t;
-    pub fn iconv(
-        cd: iconv_t,
-        inbuf: *mut *mut c_char,
-        inbytesleft: *mut size_t,
-        outbuf: *mut *mut c_char,
-        outbytesleft: *mut size_t,
-    ) -> size_t;
-    pub fn iconv_close(cd: iconv_t) -> c_int;
-
-    pub fn getopt_long(
-        argc: c_int,
-        argv: *const *mut c_char,
-        optstring: *const c_char,
-        longopts: *const option,
-        longindex: *mut c_int,
-    ) -> c_int;
-
-    pub fn backtrace(buf: *mut *mut c_void, sz: c_int) -> c_int;
-
-    pub fn reboot(how_to: c_int) -> c_int;
-
-    pub fn getloadavg(loadavg: *mut c_double, nelem: c_int) -> c_int;
-
-    pub fn regexec(
-        preg: *const crate::regex_t,
-        input: *const c_char,
-        nmatch: size_t,
-        pmatch: *mut regmatch_t,
-        eflags: c_int,
-    ) -> c_int;
-
-    pub fn regerror(
-        errcode: c_int,
-        preg: *const crate::regex_t,
-        errbuf: *mut c_char,
-        errbuf_size: size_t,
-    ) -> size_t;
-
-    pub fn regfree(preg: *mut crate::regex_t);
 
     #[cfg_attr(
         all(gnu_file_offset_bits64, gnu_time_bits64),
@@ -5217,12 +5256,8 @@ extern "C" {
         all(gnu_file_offset_bits64, not(gnu_time_bits64)),
         link_name = "glob64"
     )]
-    pub fn glob(
-        pattern: *const c_char,
-        flags: c_int,
-        errfunc: Option<extern "C" fn(epath: *const c_char, errno: c_int) -> c_int>,
-        pglob: *mut glob_t,
-    ) -> c_int;
+    // FIXME(1.0,deprecate,64): lfs binding to be removed
+    pub fn posix_fadvise64(fd: c_int, offset: off64_t, len: off64_t, advise: c_int) -> c_int;
     #[cfg_attr(
         all(gnu_file_offset_bits64, gnu_time_bits64),
         link_name = "__globfree64_time64"
@@ -5231,13 +5266,122 @@ extern "C" {
         all(gnu_file_offset_bits64, not(gnu_time_bits64)),
         link_name = "globfree64"
     )]
-    pub fn globfree(pglob: *mut glob_t);
+    pub fn madvise(__addr: *mut c_void, __len: size_t, __advice: c_int) -> c_int;
 
     #[cfg_attr(gnu_time_bits64, link_name = "__glob64_time64")]
     #[deprecated(
         since = "0.2.187",
         note = "Use `glob` instead. Their definitions are equivalent."
     )]
+    pub fn posix_madvise(addr: *mut c_void, len: size_t, advice: c_int) -> c_int;
+    #[cfg_attr(gnu_time_bits64, link_name = "__globfree64_time64")]
+    #[deprecated(
+        since = "0.2.187",
+        note = "Use `globfree` instead. Their definitions are equivalent."
+    )]
+    #[cfg_attr(gnu_file_offset_bits64, link_name = "getrlimit64")]
+    pub fn getrlimit(resource: __rlimit_resource_t, rlim: *mut crate::rlimit) -> c_int;
+
+    // FIXME(1.0,deprecate,64): lfs binding to be removed
+    pub fn getrlimit64(resource: __rlimit_resource_t, rlim: *mut rlimit64) -> c_int;
+    #[cfg_attr(gnu_file_offset_bits64, link_name = "setrlimit64")]
+    pub fn setrlimit(resource: __rlimit_resource_t, rlim: *const crate::rlimit) -> c_int;
+    // FIXME(1.0,deprecate,64): lfs binding to be removed
+    pub fn setrlimit64(resource: __rlimit_resource_t, rlim: *const rlimit64) -> c_int;
+    pub fn getpriority(which: crate::__priority_which, who: crate::id_t) -> c_int;
+    pub fn setpriority(which: crate::__priority_which, who: crate::id_t, prio: c_int) -> c_int;
+    pub fn getrandom(__buffer: *mut c_void, __length: size_t, __flags: c_uint) -> ssize_t;
+    pub fn getentropy(__buffer: *mut c_void, __length: size_t) -> c_int;
+    pub fn memrchr(cx: *const c_void, c: c_int, n: size_t) -> *mut c_void;
+    pub fn memmem(
+        haystack: *const c_void,
+        haystacklen: size_t,
+        needle: *const c_void,
+        needlelen: size_t,
+    ) -> *mut c_void;
+    pub fn strchrnul(s: *const c_char, c: c_int) -> *mut c_char;
+    pub fn mempcpy(dest: *mut c_void, src: *const c_void, n: size_t) -> *mut c_void;
+    pub fn explicit_bzero(s: *mut c_void, n: size_t);
+
+    pub fn abs(i: c_int) -> c_int;
+    pub fn labs(i: c_long) -> c_long;
+    pub fn rand() -> c_int;
+
+    pub fn srand(seed: c_uint);
+    pub fn drand48() -> c_double;
+    pub fn erand48(xseed: *mut c_ushort) -> c_double;
+
+    pub fn lrand48() -> c_long;
+    pub fn nrand48(xseed: *mut c_ushort) -> c_long;
+    pub fn mrand48() -> c_long;
+    pub fn jrand48(xseed: *mut c_ushort) -> c_long;
+    pub fn srand48(seed: c_long);
+    pub fn seed48(xseed: *mut c_ushort) -> *mut c_ushort;
+
+    pub fn lcong48(p: *mut c_ushort);
+
+    pub fn arc4random() -> u32;
+    pub fn arc4random_buf(buf: *mut c_void, size: size_t);
+
+    pub fn arc4random_uniform(upper_bound: u32) -> u32;
+    pub fn qsort_r(
+        base: *mut c_void,
+        num: size_t,
+        size: size_t,
+        compar: Option<unsafe extern "C" fn(*const c_void, *const c_void, *mut c_void) -> c_int>,
+        arg: *mut c_void,
+    );
+    pub fn brk(addr: *mut c_void) -> c_int;
+    pub fn sbrk(increment: intptr_t) -> *mut c_void;
+    pub fn memalign(align: size_t, size: size_t) -> *mut c_void;
+    pub fn mallopt(param: c_int, value: c_int) -> c_int;
+    pub fn mallinfo() -> crate::mallinfo;
+    pub fn mallinfo2() -> crate::mallinfo2;
+    pub fn malloc_info(options: c_int, stream: *mut crate::FILE) -> c_int;
+    pub fn malloc_usable_size(ptr: *mut c_void) -> size_t;
+    pub fn malloc_trim(__pad: size_t) -> c_int;
+    pub fn iconv_open(tocode: *const c_char, fromcode: *const c_char) -> iconv_t;
+    pub fn iconv(
+        cd: iconv_t,
+        inbuf: *mut *mut c_char,
+        inbytesleft: *mut size_t,
+        outbuf: *mut *mut c_char,
+        outbytesleft: *mut size_t,
+    ) -> size_t;
+    pub fn iconv_close(cd: iconv_t) -> c_int;
+    pub fn getopt_long(
+        argc: c_int,
+        argv: *const *mut c_char,
+        optstring: *const c_char,
+        longopts: *const option,
+        longindex: *mut c_int,
+    ) -> c_int;
+    pub fn backtrace(buf: *mut *mut c_void, sz: c_int) -> c_int;
+    pub fn backtrace_symbols(array: *const *mut c_void, size: c_int) -> *mut *mut c_char;
+    pub fn backtrace_symbols_fd(array: *const *mut c_void, size: c_int, fd: c_int);
+    pub fn reboot(how_to: c_int) -> c_int;
+    pub fn getloadavg(loadavg: *mut c_double, nelem: c_int) -> c_int;
+    pub fn regexec(
+        preg: *const crate::regex_t,
+        input: *const c_char,
+        nmatch: size_t,
+        pmatch: *mut regmatch_t,
+        eflags: c_int,
+    ) -> c_int;
+    pub fn regerror(
+        errcode: c_int,
+        preg: *const crate::regex_t,
+        errbuf: *mut c_char,
+        errbuf_size: size_t,
+    ) -> size_t;
+    pub fn regfree(preg: *mut crate::regex_t);
+    pub fn glob(
+        pattern: *const c_char,
+        flags: c_int,
+        errfunc: Option<extern "C" fn(epath: *const c_char, errno: c_int) -> c_int>,
+        pglob: *mut glob_t,
+    ) -> c_int;
+    pub fn globfree(pglob: *mut glob_t);
     #[allow(deprecated)]
     pub fn glob64(
         pattern: *const c_char,
@@ -5245,14 +5389,8 @@ extern "C" {
         errfunc: Option<extern "C" fn(epath: *const c_char, errno: c_int) -> c_int>,
         pglob: *mut glob64_t,
     ) -> c_int;
-    #[cfg_attr(gnu_time_bits64, link_name = "__globfree64_time64")]
-    #[deprecated(
-        since = "0.2.187",
-        note = "Use `globfree` instead. Their definitions are equivalent."
-    )]
     #[allow(deprecated)]
     pub fn globfree64(pglob: *mut glob64_t);
-
     pub fn getxattr(
         path: *const c_char,
         name: *const c_char,
@@ -5298,7 +5436,6 @@ extern "C" {
     pub fn removexattr(path: *const c_char, name: *const c_char) -> c_int;
     pub fn lremovexattr(path: *const c_char, name: *const c_char) -> c_int;
     pub fn fremovexattr(filedes: c_int, name: *const c_char) -> c_int;
-
     pub fn dirname(path: *mut c_char) -> *mut c_char;
     /// POSIX version of `basename(3)`, defined in `libgen.h`.
     #[link_name = "__xpg_basename"]
@@ -5306,8 +5443,8 @@ extern "C" {
     /// GNU version of `basename(3)`, defined in `string.h`.
     #[link_name = "basename"]
     pub fn gnu_basename(path: *const c_char) -> *mut c_char;
-
     pub fn dlmopen(lmid: Lmid_t, filename: *const c_char, flag: c_int) -> *mut c_void;
+    pub fn dlvsym(handle: *mut c_void, name: *const c_char, version: *const c_char) -> *mut c_void;
     pub fn dlinfo(handle: *mut c_void, request: c_int, info: *mut c_void) -> c_int;
     pub fn dladdr1(
         addr: *const c_void,
@@ -5315,14 +5452,12 @@ extern "C" {
         extra_info: *mut *mut c_void,
         flags: c_int,
     ) -> c_int;
-
     pub fn duplocale(base: crate::locale_t) -> crate::locale_t;
     pub fn freelocale(loc: crate::locale_t);
     pub fn newlocale(mask: c_int, locale: *const c_char, base: crate::locale_t) -> crate::locale_t;
     pub fn uselocale(loc: crate::locale_t) -> crate::locale_t;
     pub fn nl_langinfo(item: crate::nl_item) -> *mut c_char;
     pub fn nl_langinfo_l(item: crate::nl_item, locale: crate::locale_t) -> *mut c_char;
-
     pub fn dl_iterate_phdr(
         callback: Option<
             unsafe extern "C" fn(
@@ -5333,9 +5468,37 @@ extern "C" {
         >,
         data: *mut c_void,
     ) -> c_int;
-
     pub fn gnu_get_libc_release() -> *const c_char;
     pub fn gnu_get_libc_version() -> *const c_char;
+    pub fn ftok(pathname: *const c_char, proj_id: c_int) -> key_t;
+    pub fn shmctl(shmid: c_int, cmd: c_int, buf: *mut shmid_ds) -> c_int;
+    pub fn shmget(key: key_t, size: size_t, shmflg: c_int) -> c_int;
+    pub fn shmat(shmid: c_int, shmaddr: *const c_void, shmflg: c_int) -> *mut c_void;
+    pub fn shmdt(shmaddr: *const c_void) -> c_int;
+    pub fn semctl(semid: c_int, semnum: c_int, cmd: c_int, ...) -> c_int;
+    pub fn semget(key: key_t, nsems: c_int, semflg: c_int) -> c_int;
+    pub fn semop(semid: c_int, sops: *mut sembuf, nsops: size_t) -> c_int;
+    pub fn getauxval(type_: c_ulong) -> c_ulong;
+    pub fn msgctl(msqid: c_int, cmd: c_int, buf: *mut msqid_ds) -> c_int;
+    pub fn msgget(key: key_t, msgflg: c_int) -> c_int;
+    pub fn msgrcv(
+        msqid: c_int,
+        msgp: *mut c_void,
+        msgsz: size_t,
+        msgtyp: c_long,
+        msgflg: c_int,
+    ) -> ssize_t;
+    pub fn msgsnd(msqid: c_int, msgp: *const c_void, msgsz: size_t, msgflg: c_int) -> c_int;
+    pub fn get_nprocs_conf() -> c_int;
+    pub fn get_nprocs() -> c_int;
+    pub fn get_phys_pages() -> c_long;
+    pub fn get_avphys_pages() -> c_long;
+    pub fn getcontext(ucp: *mut ucontext_t) -> c_int;
+    pub fn setcontext(ucp: *const ucontext_t) -> c_int;
+    pub fn swapcontext(oucp: *mut ucontext_t, ucp: *const ucontext_t) -> c_int;
+    pub fn swapoff(path: *const c_char) -> c_int;
+    pub fn swapon(path: *const c_char, flags: c_int) -> c_int;
+    pub fn makecontext(ucp: *mut ucontext_t, func: extern "C" fn(), argc: c_int, ...);
 }
 
 cfg_if! {
