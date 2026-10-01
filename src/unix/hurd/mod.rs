@@ -230,9 +230,6 @@ pub type speed_t = c_int;
 
 pub type sigval_t = crate::sigval;
 
-pub type greg_t = c_int;
-pub type gregset_t = [greg_t; 19usize];
-
 pub type __ioctl_dir = c_uint;
 
 pub type __ioctl_datum = c_uint;
@@ -329,7 +326,13 @@ s! {
     pub struct sockaddr_storage {
         pub ss_len: c_uchar,
         pub ss_family: sa_family_t,
+        #[cfg(target_pointer_width = "64")]
+        __ss_padding: Padding<[c_char; 118usize]>,
+        #[cfg(target_pointer_width = "64")]
+        __ss_align: __uint64_t,
+        #[cfg(target_pointer_width = "32")]
         __ss_padding: Padding<[c_char; 122usize]>,
+        #[cfg(target_pointer_width = "32")]
         __ss_align: __uint32_t,
     }
 
@@ -912,10 +915,13 @@ s! {
         pub msg_len: c_uint,
     }
 
-    pub struct ifreq {
-        /// interface name, e.g. "en0"
-        pub ifr_name: [c_char; crate::IFNAMSIZ],
-        pub ifr_ifru: crate::sockaddr,
+    pub struct ifmap {
+        pub mem_start: c_ulong,
+        pub mem_end: c_ulong,
+        pub base_addr: c_ushort,
+        pub irq: c_uchar,
+        pub dma: c_uchar,
+        pub port: c_uchar,
     }
 
     pub struct __locale_struct {
@@ -932,7 +938,6 @@ s! {
         pub release: [c_char; _UTSNAME_LENGTH],
         pub version: [c_char; _UTSNAME_LENGTH],
         pub machine: [c_char; _UTSNAME_LENGTH],
-        pub domainname: [c_char; _UTSNAME_LENGTH],
     }
 
     // FIXME(1.0,deprecate,64): lfs binding to be removed
@@ -1158,6 +1163,27 @@ s_no_extra_traits! {
     union __c_anonymous___mbstate_t___value {
         __wch: c_int,
         __wchb: [c_char; 4],
+    }
+
+    pub union __c_anonymous_ifr_ifru {
+        pub ifru_addr: crate::sockaddr,
+        pub ifru_dstaddr: crate::sockaddr,
+        pub ifru_broadaddr: crate::sockaddr,
+        pub ifru_netmask: crate::sockaddr,
+        pub ifru_hwaddr: crate::sockaddr,
+        pub ifru_flags: c_short,
+        pub ifru_ivalue: c_int,
+        pub ifru_mtu: c_int,
+        pub ifru_map: ifmap,
+        pub ifru_slave: [c_char; crate::IFNAMSIZ],
+        pub ifru_newname: [c_char; crate::IFNAMSIZ],
+        pub ifru_data: crate::caddr_t,
+    }
+
+    pub struct ifreq {
+        /// interface name, e.g. "en0"
+        pub ifr_name: [c_char; crate::IFNAMSIZ],
+        pub ifr_ifru: __c_anonymous_ifr_ifru,
     }
 }
 

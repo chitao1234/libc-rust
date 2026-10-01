@@ -39,6 +39,10 @@ pub type Elf_Phdr = crate::Elf32_Phdr;
 pub type Elf_Shdr = crate::Elf32_Shdr;
 pub type Elf_Sym = crate::Elf32_Sym;
 
+// sys/ucontext.h
+pub type greg_t = c_int;
+pub type gregset_t = [greg_t; 19usize];
+
 s! {
     pub struct Elf32_Ehdr {
         pub e_ident: [c_uchar; 16],
@@ -88,5 +92,80 @@ s! {
         pub p_memsz: crate::Elf32_Word,
         pub p_flags: crate::Elf32_Word,
         pub p_align: crate::Elf32_Word,
+    }
+
+    // sys/ucontext.h
+    pub struct __c_anonymous_fpchip_state {
+        pub state: [c_int; 27],
+        pub status: c_int,
+    }
+
+    pub struct __c_anonymous_fp_emul_space {
+        pub fp_emul: [c_char; 246],
+        pub epad: [c_char; 2],
+    }
+
+    /// Note that unlike the x86-64 port, `fpregs` is held by value, not as a pointer.
+    pub struct fpregset_t {
+        pub fp_reg_set: __c_anonymous_fp_reg_set,
+        pub f_wregs: [c_long; 33],
+    }
+
+    pub struct mcontext_t {
+        pub gregs: crate::gregset_t,
+        pub fpregs: fpregset_t,
+    }
+
+    /// Note that `uc_sigmask` precedes `uc_stack` here, unlike the x86-64 port.
+    pub struct ucontext_t {
+        pub uc_flags: c_ulong,
+        pub uc_link: *mut ucontext_t,
+        pub uc_sigmask: crate::sigset_t,
+        pub uc_stack: crate::stack_t,
+        pub uc_mcontext: mcontext_t,
+        __glibc_reserved1: Padding<[c_long; 5]>,
+    }
+
+    // sys/ipc.h
+    pub struct ipc_perm {
+        pub __key: crate::key_t,
+        pub uid: c_ushort,
+        pub gid: c_ushort,
+        pub cuid: c_ushort,
+        pub cgid: c_ushort,
+        pub mode: c_ushort,
+        pub __seq: c_ushort,
+    }
+}
+
+s_no_extra_traits! {
+    pub union __c_anonymous_fp_reg_set {
+        pub fpchip_state: __c_anonymous_fpchip_state,
+        pub fp_emul_space: __c_anonymous_fp_emul_space,
+        pub f_fpregs: [c_int; 62],
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for __c_anonymous_fp_reg_set {
+            fn eq(&self, other: &__c_anonymous_fp_reg_set) -> bool {
+                unsafe {
+                    self.fpchip_state == other.fpchip_state
+                        && self.fp_emul_space == other.fp_emul_space
+                        && self.f_fpregs == other.f_fpregs
+                }
+            }
+        }
+        impl Eq for __c_anonymous_fp_reg_set {}
+        impl hash::Hash for __c_anonymous_fp_reg_set {
+            fn hash<H: hash::Hasher>(&self, state: &mut H) {
+                unsafe {
+                    self.fpchip_state.hash(state);
+                    self.fp_emul_space.hash(state);
+                    self.f_fpregs.hash(state);
+                }
+            }
+        }
     }
 }

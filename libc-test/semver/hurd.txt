@@ -1,0 +1,6 @@
+__c_anonymous_ifr_ifru
+fpregset_t
+ifmap
+ipc_perm
+mcontext_t
+ucontext_t

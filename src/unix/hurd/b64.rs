@@ -41,6 +41,12 @@ pub type Elf_Phdr = crate::Elf64_Phdr;
 pub type Elf_Shdr = crate::Elf64_Shdr;
 pub type Elf_Sym = crate::Elf64_Sym;
 
+// sys/ucontext.h
+pub type greg_t = c_longlong;
+pub type gregset_t = [greg_t; 23usize];
+
+pub type fpregset_t = *mut _libc_fpstate;
+
 s! {
     pub struct Elf64_Ehdr {
         pub e_ident: [c_uchar; 16],
@@ -90,5 +96,57 @@ s! {
         pub p_filesz: crate::Elf64_Xword,
         pub p_memsz: crate::Elf64_Xword,
         pub p_align: crate::Elf64_Xword,
+    }
+
+    // sys/ucontext.h
+    pub struct _libc_fpxreg {
+        pub significand: [c_ushort; 4],
+        pub exponent: c_ushort,
+        __glibc_reserved1: Padding<[c_ushort; 3]>,
+    }
+
+    pub struct _libc_xmmreg {
+        pub element: [crate::__uint32_t; 4],
+    }
+
+    pub struct _libc_fpstate {
+        pub cwd: crate::__uint16_t,
+        pub swd: crate::__uint16_t,
+        pub ftw: crate::__uint16_t,
+        pub fop: crate::__uint16_t,
+        pub rip: crate::__uint64_t,
+        pub rdp: crate::__uint64_t,
+        pub mxcsr: crate::__uint32_t,
+        pub mxcr_mask: crate::__uint32_t,
+        pub _st: [_libc_fpxreg; 8],
+        pub _xmm: [_libc_xmmreg; 16],
+        __glibc_reserved1: Padding<[crate::__uint32_t; 24]>,
+    }
+
+    pub struct mcontext_t {
+        pub gregs: crate::gregset_t,
+        pub fpregs: fpregset_t,
+        __reserved1: Padding<[c_ulonglong; 8]>,
+    }
+
+    pub struct ucontext_t {
+        pub uc_flags: c_ulong,
+        pub uc_link: *mut ucontext_t,
+        pub uc_stack: crate::stack_t,
+        pub uc_mcontext: mcontext_t,
+        pub uc_sigmask: crate::sigset_t,
+        __fpregs_mem: _libc_fpstate,
+        __ssp: Padding<[c_ulonglong; 4]>,
+    }
+
+    // sys/ipc.h
+    pub struct ipc_perm {
+        pub __key: crate::key_t,
+        pub uid: crate::uid_t,
+        pub gid: crate::gid_t,
+        pub cuid: crate::uid_t,
+        pub cgid: crate::gid_t,
+        pub mode: crate::mode_t,
+        pub __seq: c_ushort,
     }
 }
