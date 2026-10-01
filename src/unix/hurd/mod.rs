@@ -230,6 +230,10 @@ pub type speed_t = c_int;
 
 pub type sigval_t = crate::sigval;
 
+pub type msgqnum_t = c_ushort;
+pub type msglen_t = c_ushort;
+pub type shmatt_t = c_ushort;
+
 pub type __ioctl_dir = c_uint;
 
 pub type __ioctl_datum = c_uint;
@@ -1210,6 +1214,47 @@ s! {
         pub sem_flg: c_short,
     }
 
+    pub struct semid_ds {
+        pub sem_perm: ipc_perm,
+        pub sem_otime: crate::time_t,
+        pub sem_ctime: crate::time_t,
+        __sembase: *mut c_void,
+        __sem_pending: *mut c_void,
+        __sem_pending_last: *mut c_void,
+        __undo: *mut c_void,
+        pub sem_nsems: c_ushort,
+    }
+
+    pub struct msqid_ds {
+        pub msg_perm: ipc_perm,
+        __msg_first: *mut c_void,
+        __msg_last: *mut c_void,
+        pub msg_stime: crate::time_t,
+        pub msg_rtime: crate::time_t,
+        pub msg_ctime: crate::time_t,
+        __wwait: *mut c_void,
+        __rwait: *mut c_void,
+        __msg_cbytes: c_ushort,
+        pub msg_qnum: msgqnum_t,
+        pub msg_qbytes: msglen_t,
+        pub msg_lspid: __ipc_pid_t,
+        pub msg_lrpid: __ipc_pid_t,
+    }
+
+    pub struct shmid_ds {
+        pub shm_perm: ipc_perm,
+        pub shm_segsz: size_t,
+        pub shm_atime: crate::time_t,
+        pub shm_dtime: crate::time_t,
+        pub shm_ctime: crate::time_t,
+        pub shm_cpid: __ipc_pid_t,
+        pub shm_lpid: __ipc_pid_t,
+        pub shm_nattch: shmatt_t,
+        __shm_npages: c_ushort,
+        __shm_pages: *mut c_ulong,
+        __attaches: *mut c_void,
+    }
+
     pub struct mntent {
         pub mnt_fsname: *mut c_char,
         pub mnt_dir: *mut c_char,
@@ -1368,6 +1413,7 @@ pub const GLOB_NOSPACE: c_int = 1;
 pub const GLOB_ABORTED: c_int = 2;
 pub const GLOB_NOMATCH: c_int = 3;
 
+pub const GLOB_NOSYS: c_int = 4;
 pub const GLOB_PERIOD: c_int = 1 << 7;
 pub const GLOB_ALTDIRFUNC: c_int = 1 << 9;
 pub const GLOB_BRACE: c_int = 1 << 10;
@@ -1403,6 +1449,29 @@ pub const SHM_REMAP: c_int = 0o40000;
 
 pub const SHM_LOCK: c_int = 11;
 pub const SHM_UNLOCK: c_int = 12;
+pub const SHM_STAT: c_int = 13;
+pub const SHM_INFO: c_int = 14;
+
+pub const SHM_DEST: c_int = 0o1000;
+pub const SHM_LOCKED: c_int = 0o2000;
+
+/// Constants may change across releases. See the [usage guidelines](crate#usage-guidelines)
+/// for details.
+pub const SHMLBA: c_int = 4096;
+
+pub const SEM_UNDO: c_int = 4096;
+// sys/sem.h
+pub const GETPID: c_int = 11;
+pub const GETVAL: c_int = 12;
+pub const GETALL: c_int = 13;
+pub const GETNCNT: c_int = 14;
+pub const GETZCNT: c_int = 15;
+pub const SETVAL: c_int = 16;
+
+pub const SETALL: c_int = 17;
+pub const SEM_STAT: c_int = 18;
+pub const SEM_INFO: c_int = 19;
+
 // unistd.h
 pub const __FD_SETSIZE: c_int = 256;
 pub const R_OK: c_int = 4;
@@ -1423,8 +1492,16 @@ pub const F_TLOCK: c_int = 2;
 pub const F_TEST: c_int = 3;
 pub const CLOSE_RANGE_CLOEXEC: c_int = 4;
 
+pub const BUFSIZ: c_uint = 8192;
 // stdio.h
 pub const EOF: c_int = -1;
+pub const L_tmpnam: c_uint = 20;
+pub const TMP_MAX: c_uint = 238328;
+pub const FILENAME_MAX: c_uint = 1024;
+pub const FOPEN_MAX: c_uint = 16;
+pub const RENAME_NOREPLACE: c_uint = 1;
+pub const RENAME_EXCHANGE: c_uint = 2;
+pub const RENAME_WHITEOUT: c_uint = 4;
 
 // stdlib.h
 pub const WNOHANG: c_int = 1;
@@ -1447,6 +1524,20 @@ pub const LITTLE_ENDIAN: usize = 1234;
 pub const BIG_ENDIAN: usize = 4321;
 pub const PDP_ENDIAN: usize = 3412;
 pub const BYTE_ORDER: usize = 1234;
+
+pub const M_MXFAST: c_int = 1;
+pub const M_NLBLKS: c_int = 2;
+pub const M_GRAIN: c_int = 3;
+pub const M_KEEP: c_int = 4;
+pub const M_TRIM_THRESHOLD: c_int = -1;
+pub const M_TOP_PAD: c_int = -2;
+pub const M_MMAP_THRESHOLD: c_int = -3;
+pub const M_MMAP_MAX: c_int = -4;
+pub const M_CHECK_ACTION: c_int = -5;
+pub const M_PERTURB: c_int = -6;
+pub const M_ARENA_TEST: c_int = -7;
+// malloc.h
+pub const M_ARENA_MAX: c_int = -8;
 
 // sys/select.h
 pub const FD_SETSIZE: c_int = 256;
@@ -1481,6 +1572,18 @@ pub const PRIO_MAX: c_int = 20;
 
 // pwd.h
 pub const NSS_BUFLEN_PASSWD: usize = 1024;
+
+pub const EMPTY: c_short = 0;
+pub const RUN_LVL: c_short = 1;
+pub const BOOT_TIME: c_short = 2;
+pub const NEW_TIME: c_short = 3;
+pub const OLD_TIME: c_short = 4;
+pub const INIT_PROCESS: c_short = 5;
+pub const LOGIN_PROCESS: c_short = 6;
+pub const USER_PROCESS: c_short = 7;
+pub const DEAD_PROCESS: c_short = 8;
+// utmp.h
+pub const ACCOUNTING: c_short = 9;
 
 // sys/socket.h
 pub const SOCK_TYPE_MASK: usize = 15;
@@ -1519,6 +1622,7 @@ pub const PF_INET6: c_int = 26;
 pub const PF_MAX: c_int = 27;
 
 pub const AF_UNSPEC: c_int = 0;
+
 pub const AF_LOCAL: c_int = 1;
 pub const AF_UNIX: c_int = 1;
 pub const AF_FILE: c_int = 1;
@@ -1547,23 +1651,23 @@ pub const AF_IPX: c_int = 23;
 pub const AF_SIP: c_int = 24;
 pub const pseudo_AF_PIP: c_int = 25;
 pub const AF_INET6: c_int = 26;
-
 /// Constants may change across releases. See the [usage guidelines](crate#usage-guidelines)
 /// for details.
 pub const AF_MAX: c_int = 27;
 
 pub const SOMAXCONN: c_int = 4096;
+
 pub const _SS_SIZE: usize = 128;
 pub const CMGROUP_MAX: usize = 16;
 pub const SOL_SOCKET: c_int = 65535;
-
 // sys/time.h
 pub const ITIMER_REAL: c_int = 0;
+
 pub const ITIMER_VIRTUAL: c_int = 1;
 pub const ITIMER_PROF: c_int = 2;
-
 // netinet/in.h
 pub const SOL_IP: c_int = 0;
+
 pub const SOL_TCP: c_int = 6;
 pub const SOL_UDP: c_int = 17;
 pub const SOL_IPV6: c_int = 41;
@@ -1663,19 +1767,19 @@ pub const INADDR_ALLSNOOPERS_GROUP: in_addr_t = 3758096490;
 pub const INADDR_MAX_LOCAL_GROUP: in_addr_t = 3758096639;
 pub const INET_ADDRSTRLEN: usize = 16;
 pub const INET6_ADDRSTRLEN: usize = 46;
-
 // netinet/ip.h
 pub const IPTOS_TOS_MASK: u8 = 0x1E;
-pub const IPTOS_PREC_MASK: u8 = 0xE0;
 
+pub const IPTOS_PREC_MASK: u8 = 0xE0;
 pub const IPTOS_ECN_NOT_ECT: u8 = 0x00;
 
 pub const IPTOS_LOWDELAY: u8 = 0x10;
+
 pub const IPTOS_THROUGHPUT: u8 = 0x08;
 pub const IPTOS_RELIABILITY: u8 = 0x04;
 pub const IPTOS_MINCOST: u8 = 0x02;
-
 pub const IPTOS_PREC_NETCONTROL: u8 = 0xe0;
+
 pub const IPTOS_PREC_INTERNETCONTROL: u8 = 0xc0;
 pub const IPTOS_PREC_CRITIC_ECP: u8 = 0xa0;
 pub const IPTOS_PREC_FLASHOVERRIDE: u8 = 0x80;
@@ -1683,17 +1787,17 @@ pub const IPTOS_PREC_FLASH: u8 = 0x60;
 pub const IPTOS_PREC_IMMEDIATE: u8 = 0x40;
 pub const IPTOS_PREC_PRIORITY: u8 = 0x20;
 pub const IPTOS_PREC_ROUTINE: u8 = 0x00;
-
 pub const IPTOS_ECN_MASK: u8 = 0x03;
+
 pub const IPTOS_ECN_ECT1: u8 = 0x01;
 pub const IPTOS_ECN_ECT0: u8 = 0x02;
 pub const IPTOS_ECN_CE: u8 = 0x03;
-
 pub const IPOPT_COPY: u8 = 0x80;
+
 pub const IPOPT_CLASS_MASK: u8 = 0x60;
 pub const IPOPT_NUMBER_MASK: u8 = 0x1f;
-
 pub const IPOPT_CONTROL: u8 = 0x00;
+
 pub const IPOPT_RESERVED1: u8 = 0x20;
 pub const IPOPT_MEASUREMENT: u8 = 0x40;
 pub const IPOPT_RESERVED2: u8 = 0x60;
@@ -1720,26 +1824,26 @@ pub const IPOPT_TS: u8 = IPOPT_TIMESTAMP;
 pub const IPOPT_TS_TSONLY: u8 = 0;
 pub const IPOPT_TS_TSANDADDR: u8 = 1;
 pub const IPOPT_TS_PRESPEC: u8 = 3;
-
 // net/if_arp.h
 pub const ARPOP_REQUEST: u16 = 1;
+
 pub const ARPOP_REPLY: u16 = 2;
 pub const ARPOP_RREQUEST: u16 = 3;
 pub const ARPOP_RREPLY: u16 = 4;
 pub const ARPOP_InREQUEST: u16 = 8;
 pub const ARPOP_InREPLY: u16 = 9;
 pub const ARPOP_NAK: u16 = 10;
-
 pub const MAX_ADDR_LEN: usize = 7;
+
 pub const ARPD_UPDATE: c_ushort = 0x01;
 pub const ARPD_LOOKUP: c_ushort = 0x02;
 pub const ARPD_FLUSH: c_ushort = 0x03;
 pub const ATF_MAGIC: c_int = 0x80;
-
 pub const ATF_NETMASK: c_int = 0x20;
-pub const ATF_DONTPUB: c_int = 0x40;
 
+pub const ATF_DONTPUB: c_int = 0x40;
 pub const ARPHRD_NETROM: u16 = 0;
+
 pub const ARPHRD_ETHER: u16 = 1;
 pub const ARPHRD_EETHER: u16 = 2;
 pub const ARPHRD_AX25: u16 = 3;
@@ -1754,8 +1858,8 @@ pub const ARPHRD_METRICOM: u16 = 23;
 pub const ARPHRD_IEEE1394: u16 = 24;
 pub const ARPHRD_EUI64: u16 = 27;
 pub const ARPHRD_INFINIBAND: u16 = 32;
-
 pub const ARPHRD_SLIP: u16 = 256;
+
 pub const ARPHRD_CSLIP: u16 = 257;
 pub const ARPHRD_SLIP6: u16 = 258;
 pub const ARPHRD_CSLIP6: u16 = 259;
@@ -1771,8 +1875,8 @@ pub const ARPHRD_HDLC: u16 = ARPHRD_CISCO;
 pub const ARPHRD_LAPB: u16 = 516;
 pub const ARPHRD_DDCMP: u16 = 517;
 pub const ARPHRD_RAWHDLC: u16 = 518;
-
 pub const ARPHRD_TUNNEL: u16 = 768;
+
 pub const ARPHRD_TUNNEL6: u16 = 769;
 pub const ARPHRD_FRAD: u16 = 770;
 pub const ARPHRD_SKIP: u16 = 771;
@@ -1797,12 +1901,12 @@ pub const ARPHRD_IEEE80211: u16 = 801;
 pub const ARPHRD_IEEE80211_PRISM: u16 = 802;
 pub const ARPHRD_IEEE80211_RADIOTAP: u16 = 803;
 pub const ARPHRD_IEEE802154: u16 = 804;
-
 pub const ARPHRD_VOID: u16 = 0xFFFF;
-pub const ARPHRD_NONE: u16 = 0xFFFE;
 
+pub const ARPHRD_NONE: u16 = 0xFFFE;
 // bits/posix1_lim.h
 pub const _POSIX_AIO_LISTIO_MAX: usize = 2;
+
 pub const _POSIX_AIO_MAX: usize = 1;
 pub const _POSIX_ARG_MAX: usize = 4096;
 pub const _POSIX_CHILD_MAX: usize = 25;
@@ -1836,7 +1940,6 @@ pub const _POSIX_QLIMIT: usize = 1;
 pub const _POSIX_HIWAT: usize = 512;
 pub const _POSIX_UIO_MAXIOV: usize = 16;
 pub const _POSIX_CLOCKRES_MIN: usize = 20000000;
-
 /// Constants may change across releases. See the [usage guidelines](crate#usage-guidelines)
 /// for details.
 pub const NAME_MAX: usize = 255;
@@ -1844,15 +1947,24 @@ pub const NAME_MAX: usize = 255;
 /// Constants may change across releases. See the [usage guidelines](crate#usage-guidelines)
 /// for details.
 pub const NGROUPS_MAX: usize = 256;
-
 pub const _POSIX_THREAD_KEYS_MAX: usize = 128;
 pub const _POSIX_THREAD_DESTRUCTOR_ITERATIONS: usize = 4;
 pub const _POSIX_THREAD_THREADS_MAX: usize = 64;
 pub const SEM_VALUE_MAX: c_int = 2147483647;
 pub const MAXNAMLEN: usize = 255;
 
+// bits/xopen_lim.h
+pub const NL_ARGMAX: c_int = 4096;
+
+pub const NL_LANGMAX: c_int = 2048;
+
+pub const NL_MSGMAX: c_int = 2147483647;
+pub const NL_SETMAX: c_int = 2147483647;
+pub const NL_TEXTMAX: c_int = 2147483647;
+pub const NZERO: c_int = 20;
 // netdb.h
 pub const _PATH_HEQUIV: &[u8; 17usize] = b"/etc/hosts.equiv\0";
+
 pub const _PATH_HOSTS: &[u8; 11usize] = b"/etc/hosts\0";
 pub const _PATH_NETWORKS: &[u8; 14usize] = b"/etc/networks\0";
 pub const _PATH_NSSWITCH_CONF: &[u8; 19usize] = b"/etc/nsswitch.conf\0";
@@ -1904,9 +2016,9 @@ pub const NI_NOFQDN: c_int = 4;
 pub const NI_NAMEREQD: c_int = 8;
 pub const NI_DGRAM: c_int = 16;
 pub const NI_IDN: c_int = 32;
-
 // time.h
 pub const CLOCK_REALTIME: crate::clockid_t = 0;
+
 pub const CLOCK_MONOTONIC: crate::clockid_t = 1;
 pub const CLOCK_PROCESS_CPUTIME_ID: crate::clockid_t = 2;
 pub const CLOCK_THREAD_CPUTIME_ID: crate::clockid_t = 3;
@@ -1915,9 +2027,9 @@ pub const CLOCK_REALTIME_COARSE: crate::clockid_t = 5;
 pub const CLOCK_MONOTONIC_COARSE: crate::clockid_t = 6;
 pub const TIMER_ABSTIME: c_int = 1;
 pub const TIME_UTC: c_int = 1;
-
 // sys/poll.h
 pub const POLLIN: i16 = 1;
+
 pub const POLLPRI: i16 = 2;
 pub const POLLOUT: i16 = 4;
 pub const POLLRDNORM: i16 = 1;
@@ -1927,9 +2039,9 @@ pub const POLLWRBAND: i16 = 4;
 pub const POLLERR: i16 = 8;
 pub const POLLHUP: i16 = 16;
 pub const POLLNVAL: i16 = 32;
-
 // locale.h
 pub const __LC_CTYPE: usize = 0;
+
 pub const __LC_NUMERIC: usize = 1;
 pub const __LC_TIME: usize = 2;
 pub const __LC_COLLATE: usize = 3;
@@ -1968,37 +2080,37 @@ pub const LC_TELEPHONE_MASK: c_int = 1024;
 pub const LC_MEASUREMENT_MASK: c_int = 2048;
 pub const LC_IDENTIFICATION_MASK: c_int = 4096;
 pub const LC_ALL_MASK: c_int = 8127;
-
 pub const ABDAY_1: crate::nl_item = 0x20000;
+
 pub const ABDAY_2: crate::nl_item = 0x20001;
 pub const ABDAY_3: crate::nl_item = 0x20002;
 pub const ABDAY_4: crate::nl_item = 0x20003;
 pub const ABDAY_5: crate::nl_item = 0x20004;
 pub const ABDAY_6: crate::nl_item = 0x20005;
 pub const ABDAY_7: crate::nl_item = 0x20006;
-
 pub const DAY_1: crate::nl_item = 0x20007;
 pub const DAY_2: crate::nl_item = 0x20008;
 pub const DAY_3: crate::nl_item = 0x20009;
 pub const DAY_4: crate::nl_item = 0x2000A;
 pub const DAY_5: crate::nl_item = 0x2000B;
 pub const DAY_6: crate::nl_item = 0x2000C;
-pub const DAY_7: crate::nl_item = 0x2000D;
 
+pub const DAY_7: crate::nl_item = 0x2000D;
 pub const ABMON_1: crate::nl_item = 0x2000E;
 pub const ABMON_2: crate::nl_item = 0x2000F;
 pub const ABMON_3: crate::nl_item = 0x20010;
 pub const ABMON_4: crate::nl_item = 0x20011;
 pub const ABMON_5: crate::nl_item = 0x20012;
 pub const ABMON_6: crate::nl_item = 0x20013;
+
 pub const ABMON_7: crate::nl_item = 0x20014;
 pub const ABMON_8: crate::nl_item = 0x20015;
 pub const ABMON_9: crate::nl_item = 0x20016;
 pub const ABMON_10: crate::nl_item = 0x20017;
 pub const ABMON_11: crate::nl_item = 0x20018;
 pub const ABMON_12: crate::nl_item = 0x20019;
-
 pub const MON_1: crate::nl_item = 0x2001A;
+
 pub const MON_2: crate::nl_item = 0x2001B;
 pub const MON_3: crate::nl_item = 0x2001C;
 pub const MON_4: crate::nl_item = 0x2001D;
@@ -2010,22 +2122,36 @@ pub const MON_9: crate::nl_item = 0x20022;
 pub const MON_10: crate::nl_item = 0x20023;
 pub const MON_11: crate::nl_item = 0x20024;
 pub const MON_12: crate::nl_item = 0x20025;
-
 pub const AM_STR: crate::nl_item = 0x20026;
-pub const PM_STR: crate::nl_item = 0x20027;
 
+pub const PM_STR: crate::nl_item = 0x20027;
 pub const D_T_FMT: crate::nl_item = 0x20028;
 pub const D_FMT: crate::nl_item = 0x20029;
 pub const T_FMT: crate::nl_item = 0x2002A;
 pub const T_FMT_AMPM: crate::nl_item = 0x2002B;
-
 pub const ERA: crate::nl_item = 0x2002C;
 pub const ERA_D_FMT: crate::nl_item = 0x2002E;
 pub const ALT_DIGITS: crate::nl_item = 0x2002F;
 pub const ERA_D_T_FMT: crate::nl_item = 0x20030;
 pub const ERA_T_FMT: crate::nl_item = 0x20031;
+// langinfo.h
+pub const ALTMON_1: crate::nl_item = 131183;
+pub const ALTMON_2: crate::nl_item = 131184;
 
+pub const ALTMON_3: crate::nl_item = 131185;
+pub const ALTMON_4: crate::nl_item = 131186;
+
+pub const ALTMON_5: crate::nl_item = 131187;
+pub const ALTMON_6: crate::nl_item = 131188;
+pub const ALTMON_7: crate::nl_item = 131189;
+pub const ALTMON_8: crate::nl_item = 131190;
+
+pub const ALTMON_9: crate::nl_item = 131191;
+pub const ALTMON_10: crate::nl_item = 131192;
+pub const ALTMON_11: crate::nl_item = 131193;
+pub const ALTMON_12: crate::nl_item = 131194;
 pub const CODESET: crate::nl_item = 14;
+
 pub const CRNCYSTR: crate::nl_item = 0x4000F;
 pub const RADIXCHAR: crate::nl_item = 0x10000;
 pub const THOUSEP: crate::nl_item = 0x10001;
@@ -2033,12 +2159,13 @@ pub const YESEXPR: crate::nl_item = 0x50000;
 pub const NOEXPR: crate::nl_item = 0x50001;
 pub const YESSTR: crate::nl_item = 0x50002;
 pub const NOSTR: crate::nl_item = 0x50003;
-
 // reboot.h
 pub const RB_AUTOBOOT: c_int = 0x0;
+
 pub const RB_ASKNAME: c_int = 0x1;
 pub const RB_SINGLE: c_int = 0x2;
 pub const RB_KBD: c_int = 0x4;
+pub const RB_KDB: c_int = 4;
 pub const RB_HALT: c_int = 0x8;
 pub const RB_INITNAME: c_int = 0x10;
 pub const RB_DFLTROOT: c_int = 0x20;
@@ -2046,13 +2173,13 @@ pub const RB_NOBOOTRC: c_int = 0x20;
 pub const RB_ALTBOOT: c_int = 0x40;
 pub const RB_UNIPROC: c_int = 0x80;
 pub const RB_DEBUGGER: c_int = 0x1000;
-
 // semaphore.h
 pub const __SIZEOF_SEM_T: usize = 20;
-pub const SEM_FAILED: *mut crate::sem_t = ptr::null_mut();
 
+pub const SEM_FAILED: *mut crate::sem_t = ptr::null_mut();
 // termios.h
 pub const IGNBRK: crate::tcflag_t = 1;
+
 pub const BRKINT: crate::tcflag_t = 2;
 pub const IGNPAR: crate::tcflag_t = 4;
 pub const PARMRK: crate::tcflag_t = 8;
@@ -2236,9 +2363,9 @@ pub const CEOT: u8 = 4;
 pub const CBRK: u8 = 0u8;
 pub const CRPRNT: u8 = 18;
 pub const CFLUSH: u8 = 15;
-
 // dlfcn.h
 pub const RTLD_DEFAULT: *mut c_void = ptr::null_mut();
+
 pub const RTLD_NEXT: *mut c_void = -1i64 as *mut c_void;
 pub const RTLD_LAZY: c_int = 1;
 pub const RTLD_NOW: c_int = 2;
@@ -2252,9 +2379,9 @@ pub const DLFO_STRUCT_HAS_EH_DBASE: usize = 1;
 pub const DLFO_STRUCT_HAS_EH_COUNT: usize = 0;
 pub const LM_ID_BASE: c_long = 0;
 pub const LM_ID_NEWLM: c_long = -1;
-
 // bits/signum_generic.h
 pub const SIGINT: c_int = 2;
+
 pub const SIGILL: c_int = 4;
 pub const SIGABRT: c_int = 6;
 pub const SIGFPE: c_int = 8;
@@ -2293,9 +2420,9 @@ pub const __SIGRTMIN: usize = 32;
 pub const __SIGRTMAX: usize = 32;
 pub const _NSIG: usize = 33;
 pub const NSIG: usize = 33;
-
 // bits/sigaction.h
 pub const SA_ONSTACK: c_int = 1;
+
 pub const SA_RESTART: c_int = 2;
 pub const SA_NODEFER: c_int = 16;
 pub const SA_RESETHAND: c_int = 4;
@@ -2308,9 +2435,9 @@ pub const SA_STACK: c_int = 1;
 pub const SIG_BLOCK: c_int = 1;
 pub const SIG_UNBLOCK: c_int = 2;
 pub const SIG_SETMASK: c_int = 3;
-
 // bits/sigcontext.h
 pub const FPC_IE: u16 = 1;
+
 pub const FPC_IM: u16 = 1;
 pub const FPC_DE: u16 = 2;
 pub const FPC_DM: u16 = 2;
@@ -2364,13 +2491,13 @@ pub const DBG_SINGLE_TRAP: c_int = 1;
 pub const DBG_BRKPNT_FAULT: c_int = 2;
 pub const __NGREG: usize = 19;
 pub const NGREG: usize = 19;
-
 // bits/sigstack.h
 pub const MINSIGSTKSZ: usize = 8192;
-pub const SIGSTKSZ: usize = 40960;
 
+pub const SIGSTKSZ: usize = 40960;
 // sys/stat.h
 pub const __S_IFMT: mode_t = 0o17_0000;
+
 pub const __S_IFDIR: mode_t = 0o4_0000;
 pub const __S_IFCHR: mode_t = 0o2_0000;
 pub const __S_IFBLK: mode_t = 0o6_0000;
@@ -2454,6 +2581,10 @@ pub const STATX_ALL: c_uint = 4095;
 pub const STATX_BTIME: c_uint = 2048;
 pub const STATX_MNT_ID: c_uint = 4096;
 pub const STATX_DIOALIGN: c_uint = 8192;
+pub const STATX_MNT_ID_UNIQUE: c_uint = 16384;
+pub const STATX_SUBVOL: c_uint = 32768;
+pub const STATX_WRITE_ATOMIC: c_uint = 65536;
+pub const STATX_DIO_READ_ALIGN: c_uint = 131072;
 pub const STATX__RESERVED: c_uint = 2147483648;
 pub const STATX_ATTR_COMPRESSED: c_uint = 4;
 pub const STATX_ATTR_IMMUTABLE: c_uint = 16;
@@ -2464,9 +2595,10 @@ pub const STATX_ATTR_AUTOMOUNT: c_uint = 4096;
 pub const STATX_ATTR_MOUNT_ROOT: c_uint = 8192;
 pub const STATX_ATTR_VERITY: c_uint = 1048576;
 pub const STATX_ATTR_DAX: c_uint = 2097152;
-
+pub const STATX_ATTR_WRITE_ATOMIC: c_uint = 4194304;
 // sys/ioctl.h
 pub const TIOCM_LE: c_int = 1;
+
 pub const TIOCM_DTR: c_int = 2;
 pub const TIOCM_RTS: c_int = 4;
 pub const TIOCM_ST: c_int = 8;
@@ -2516,16 +2648,16 @@ pub const CRTKIL: crate::tcflag_t = 67108864;
 pub const PASS8: crate::tcflag_t = 134217728;
 pub const CTLECH: crate::tcflag_t = 268435456;
 pub const DECCTQ: crate::tcflag_t = 1073741824;
-
 pub const FIONBIO: c_ulong = 0xa008007e;
+
 pub const FIONREAD: c_ulong = 0x6008007f;
 pub const TIOCSWINSZ: c_ulong = 0x90200767;
 pub const TIOCGWINSZ: c_ulong = 0x50200768;
 pub const TIOCEXCL: c_ulong = 0x70d;
 pub const TIOCNXCL: c_ulong = 0x70e;
 pub const TIOCSCTTY: c_ulong = 0x761;
-
 pub const TIOCMODG: c_ulong = 0x60080703;
+
 pub const TIOCMODS: c_ulong = 0xa0080704;
 pub const TIOCFLUSH: c_ulong = 0xa0080710;
 pub const TIOCGETA: c_ulong = 0x62251713;
@@ -2595,9 +2727,9 @@ pub const TIOCSETP: c_ulong = 0x84204709;
 pub const TIOCSETN: c_ulong = 0x8420470a;
 pub const TIOCSETC: c_ulong = 0x80300711;
 pub const TIOCGETC: c_ulong = 0x40300712;
-
 // fcntl.h
 pub const O_EXEC: c_int = 4;
+
 pub const O_NORW: c_int = 0;
 pub const O_RDONLY: c_int = 1;
 pub const O_WRONLY: c_int = 2;
@@ -2675,16 +2807,16 @@ pub const AT_STATX_FORCE_SYNC: c_int = 8192;
 pub const AT_STATX_DONT_SYNC: c_int = 16384;
 pub const AT_RECURSIVE: c_int = 32768;
 pub const AT_EACCESS: c_int = 512;
-
 // sys/uio.h
 pub const RWF_HIPRI: c_int = 1;
+
 pub const RWF_DSYNC: c_int = 2;
 pub const RWF_SYNC: c_int = 4;
 pub const RWF_NOWAIT: c_int = 8;
 pub const RWF_APPEND: c_int = 16;
-
 // errno.h
 pub const EPERM: c_int = 1073741825;
+
 pub const ENOENT: c_int = 1073741826;
 pub const ESRCH: c_int = 1073741827;
 pub const EINTR: c_int = 1073741828;
@@ -2863,26 +2995,26 @@ pub const ED_INVALID_SIZE: c_int = 2507;
 pub const ED_NO_MEMORY: c_int = 2508;
 pub const ED_READ_ONLY: c_int = 2509;
 pub const _HURD_ERRNOS: usize = 122;
-
 // sched.h
 pub const SCHED_OTHER: c_int = 0;
+
 pub const SCHED_FIFO: c_int = 1;
 pub const SCHED_RR: c_int = 2;
 pub const _BITS_TYPES_STRUCT_SCHED_PARAM: usize = 1;
 pub const __CPU_SETSIZE: usize = 1024;
 pub const __NCPUBITS: usize = __cpu_mask::BITS as usize;
 pub const CPU_SETSIZE: usize = 1024;
-
 // pthread.h
 pub const PTHREAD_SPINLOCK_INITIALIZER: c_int = 0;
+
 pub const PTHREAD_CANCEL_DISABLE: c_int = 0;
 pub const PTHREAD_CANCEL_ENABLE: c_int = 1;
 pub const PTHREAD_CANCEL_DEFERRED: c_int = 0;
 pub const PTHREAD_CANCEL_ASYNCHRONOUS: c_int = 1;
 pub const PTHREAD_BARRIER_SERIAL_THREAD: c_int = -1;
-
 // netinet/tcp.h
 pub const TCP_NODELAY: c_int = 1;
+
 pub const TCP_MAXSEG: c_int = 2;
 pub const TCP_CORK: c_int = 3;
 pub const TCP_KEEPIDLE: c_int = 4;
@@ -2923,10 +3055,10 @@ pub const TCP_TX_DELAY: c_int = 37;
 pub const TCP_REPAIR_ON: c_int = 1;
 pub const TCP_REPAIR_OFF: c_int = 0;
 pub const TCP_REPAIR_OFF_NO_WP: c_int = -1;
-
 // stdint.h
 #[deprecated(since = "0.2.190", note = "Use `i8::MIN` instead.")]
 pub const INT8_MIN: i8 = i8::MIN;
+
 #[deprecated(since = "0.2.190", note = "Use `i16::MIN` instead.")]
 pub const INT16_MIN: i16 = i16::MIN;
 #[deprecated(since = "0.2.190", note = "Use `i32::MIN` instead.")]
@@ -3032,8 +3164,8 @@ pub const SIG_ATOMIC_WIDTH: usize = 32;
 pub const SIZE_WIDTH: usize = 32;
 pub const WCHAR_WIDTH: usize = 32;
 pub const WINT_WIDTH: usize = 32;
-
 pub const TH_FIN: u8 = 1;
+
 pub const TH_SYN: u8 = 2;
 pub const TH_RST: u8 = 4;
 pub const TH_PUSH: u8 = 8;
@@ -3072,20 +3204,20 @@ pub const TCP_S_DATA_IN: c_int = 4;
 pub const TCP_S_DATA_OUT: c_int = 8;
 pub const TCP_MSS_DEFAULT: usize = 536;
 pub const TCP_MSS_DESIRED: usize = 1220;
-
 // sys/wait.h
 pub const WCOREFLAG: c_int = 128;
+
 pub const WAIT_ANY: pid_t = -1;
 pub const WAIT_MYPGRP: pid_t = 0;
-
 // sys/file.h
 pub const LOCK_SH: c_int = 1;
+
 pub const LOCK_EX: c_int = 2;
 pub const LOCK_UN: c_int = 8;
 pub const LOCK_NB: c_int = 4;
-
 // sys/mman.h
 pub const PROT_NONE: c_int = 0;
+
 pub const PROT_READ: c_int = 4;
 pub const PROT_WRITE: c_int = 2;
 pub const PROT_EXEC: c_int = 1;
@@ -3101,6 +3233,7 @@ pub const MAP_NOEXTEND: c_int = 512;
 pub const MAP_HASSEMAPHORE: c_int = 1024;
 pub const MAP_INHERIT: c_int = 2048;
 pub const MAP_32BIT: c_int = 4096;
+pub const MAP_NORESERVE: c_int = 8192;
 pub const MAP_EXCL: c_int = 16384;
 pub const MAP_FAILED: *mut c_void = !0 as *mut c_void;
 pub const MADV_NORMAL: c_int = 0;
@@ -3113,31 +3246,73 @@ pub const POSIX_MADV_RANDOM: c_int = 1;
 pub const POSIX_MADV_SEQUENTIAL: c_int = 2;
 pub const POSIX_MADV_WILLNEED: c_int = 3;
 pub const POSIX_MADV_WONTNEED: c_int = 4;
-
+pub const POSIX_MADV_DONTNEED: c_int = 4;
 pub const MS_ASYNC: c_int = 1;
+
 pub const MS_SYNC: c_int = 0;
 pub const MS_INVALIDATE: c_int = 2;
 pub const MREMAP_MAYMOVE: c_int = 1;
 pub const MREMAP_FIXED: c_int = 2;
 pub const MCL_CURRENT: c_int = 0x0001;
 pub const MCL_FUTURE: c_int = 0x0002;
-
 // sys/xattr.h
 pub const XATTR_CREATE: c_int = 0x1;
-pub const XATTR_REPLACE: c_int = 0x2;
 
+pub const XATTR_REPLACE: c_int = 0x2;
+pub const POSIX_SPAWN_RESETIDS: c_short = 1;
+
+pub const POSIX_SPAWN_SETPGROUP: c_short = 2;
+pub const POSIX_SPAWN_SETSIGDEF: c_short = 4;
+pub const POSIX_SPAWN_SETSIGMASK: c_short = 8;
+pub const POSIX_SPAWN_SETSCHEDPARAM: c_short = 16;
+pub const POSIX_SPAWN_SETSCHEDULER: c_short = 32;
 // spawn.h
 pub const POSIX_SPAWN_USEVFORK: c_short = 64;
 pub const POSIX_SPAWN_SETSID: c_short = 128;
-
+pub const POSIX_SPAWN_SETCGROUP: c_short = 0x100;
 // sys/syslog.h
 pub const LOG_CRON: c_int = 9 << 3;
+
 pub const LOG_AUTHPRIV: c_int = 10 << 3;
 pub const LOG_FTP: c_int = 11 << 3;
+pub const LOG_NFACILITIES: c_int = 24;
 pub const LOG_PERROR: c_int = 0x20;
+pub const PTRACE_TRACEME: c_uint = 0;
+
+pub const PT_TRACE_ME: c_uint = 0;
+pub const PTRACE_PEEKTEXT: c_uint = 1;
+pub const PT_READ_I: c_uint = 1;
+pub const PTRACE_PEEKDATA: c_uint = 2;
+pub const PT_READ_D: c_uint = 2;
+pub const PTRACE_PEEKUSER: c_uint = 3;
+pub const PT_READ_U: c_uint = 3;
+pub const PTRACE_POKETEXT: c_uint = 4;
+pub const PT_WRITE_I: c_uint = 4;
+pub const PTRACE_POKEDATA: c_uint = 5;
+pub const PT_WRITE_D: c_uint = 5;
+pub const PTRACE_POKEUSER: c_uint = 6;
+pub const PT_WRITE_U: c_uint = 6;
+pub const PTRACE_CONT: c_uint = 7;
+pub const PT_CONTINUE: c_uint = 7;
+pub const PTRACE_KILL: c_uint = 8;
+pub const PT_KILL: c_uint = 8;
+pub const PTRACE_SINGLESTEP: c_uint = 9;
+pub const PT_STEP: c_uint = 9;
+// sys/ptrace.h
+pub const PTRACE_ATTACH: c_uint = 10;
+pub const PT_ATTACH: c_uint = 10;
+pub const PTRACE_DETACH: c_uint = 11;
+pub const PT_DETACH: c_uint = 11;
+pub const PTRACE_GETREGS: c_uint = 12;
+pub const PTRACE_SETREGS: c_uint = 13;
+pub const PTRACE_GETFPREGS: c_uint = 14;
+pub const PTRACE_SETFPREGS: c_uint = 15;
+// sys/utsname.h
+pub const SYS_NMLN: c_int = 1024;
 
 // net/if_ether.h
 pub const ETH_ALEN: c_int = 6;
+
 pub const ETH_HLEN: c_int = 14;
 pub const ETH_ZLEN: c_int = 60;
 pub const ETH_DATA_LEN: c_int = 1500;
@@ -3201,9 +3376,9 @@ pub const ETH_P_ARCNET: c_int = 0x001a;
 pub const ETH_P_DSA: c_int = 0x001b;
 pub const ETH_P_TRAILER: c_int = 0x001c;
 pub const ETH_P_PHONET: c_int = 0x00f5;
-
 // net/route.h
 pub const RTF_UP: c_uint = 0x00000001;
+
 pub const RTF_GATEWAY: c_uint = 0x00000002;
 pub const RTF_HOST: c_uint = 0x00000004;
 pub const RTF_REINSTATE: c_uint = 0x00000008;
@@ -3241,9 +3416,9 @@ pub const RTMSG_NEWRULE: c_uint = 0x31;
 pub const RTMSG_DELRULE: c_uint = 0x32;
 pub const RTMSG_CONTROL: c_uint = 0x40;
 pub const RTMSG_AR_FAILED: c_uint = 0x51;
-
 // net/if.h
 pub const IFF_UP: c_int = 0x1;
+
 pub const IFF_BROADCAST: c_int = 0x2;
 pub const IFF_DEBUG: c_int = 0x4;
 pub const IFF_LOOPBACK: c_int = 0x8;
@@ -3260,13 +3435,13 @@ pub const IFF_PORTSEL: c_int = 0x2000;
 pub const IFF_AUTOMEDIA: c_int = 0x4000;
 pub const IFF_DYNAMIC: c_int = 0x8000;
 pub const IFHWADDRLEN: c_int = 6;
-
 // random.h
 pub const GRND_NONBLOCK: c_uint = 1;
+
 pub const GRND_RANDOM: c_uint = 2;
 pub const GRND_INSECURE: c_uint = 4;
-
 pub const _PC_LINK_MAX: c_int = 0;
+
 pub const _PC_MAX_CANON: c_int = 1;
 pub const _PC_MAX_INPUT: c_int = 2;
 pub const _PC_NAME_MAX: c_int = 3;
@@ -3505,13 +3680,16 @@ pub const _SC_THREAD_ROBUST_PRIO_INHERIT: c_int = 247;
 pub const _SC_THREAD_ROBUST_PRIO_PROTECT: c_int = 248;
 pub const _SC_MINSIGSTKSZ: c_int = 249;
 pub const _SC_SIGSTKSZ: c_int = 250;
-
 pub const _CS_PATH: c_int = 0;
+
 pub const _CS_V6_WIDTH_RESTRICTED_ENVS: c_int = 1;
+pub const _CS_POSIX_V6_WIDTH_RESTRICTED_ENVS: c_int = 1;
 pub const _CS_GNU_LIBC_VERSION: c_int = 2;
 pub const _CS_GNU_LIBPTHREAD_VERSION: c_int = 3;
 pub const _CS_V5_WIDTH_RESTRICTED_ENVS: c_int = 4;
+pub const _CS_POSIX_V5_WIDTH_RESTRICTED_ENVS: c_int = 4;
 pub const _CS_V7_WIDTH_RESTRICTED_ENVS: c_int = 5;
+pub const _CS_POSIX_V7_WIDTH_RESTRICTED_ENVS: c_int = 5;
 pub const _CS_LFS_CFLAGS: c_int = 1000;
 pub const _CS_LFS_LDFLAGS: c_int = 1001;
 pub const _CS_LFS_LIBS: c_int = 1002;
@@ -3570,31 +3748,31 @@ pub const _CS_POSIX_V7_LPBIG_OFFBIG_LIBS: c_int = 1146;
 pub const _CS_POSIX_V7_LPBIG_OFFBIG_LINTFLAGS: c_int = 1147;
 pub const _CS_V6_ENV: c_int = 1148;
 pub const _CS_V7_ENV: c_int = 1149;
-
 pub const PTHREAD_PROCESS_PRIVATE: __pthread_process_shared = 0;
+
 pub const PTHREAD_PROCESS_SHARED: __pthread_process_shared = 1;
-
 pub const PTHREAD_EXPLICIT_SCHED: __pthread_inheritsched = 0;
+
 pub const PTHREAD_INHERIT_SCHED: __pthread_inheritsched = 1;
-
 pub const PTHREAD_SCOPE_SYSTEM: __pthread_contentionscope = 0;
+
 pub const PTHREAD_SCOPE_PROCESS: __pthread_contentionscope = 1;
-
 pub const PTHREAD_CREATE_JOINABLE: __pthread_detachstate = 0;
-pub const PTHREAD_CREATE_DETACHED: __pthread_detachstate = 1;
 
+pub const PTHREAD_CREATE_DETACHED: __pthread_detachstate = 1;
 pub const PTHREAD_PRIO_NONE: __pthread_mutex_protocol = 0;
+
 pub const PTHREAD_PRIO_INHERIT: __pthread_mutex_protocol = 1;
 pub const PTHREAD_PRIO_PROTECT: __pthread_mutex_protocol = 2;
-
 pub const PTHREAD_MUTEX_TIMED: __pthread_mutex_type = 0;
+
 pub const PTHREAD_MUTEX_ERRORCHECK: __pthread_mutex_type = 1;
 pub const PTHREAD_MUTEX_RECURSIVE: __pthread_mutex_type = 2;
-
 pub const PTHREAD_MUTEX_STALLED: __pthread_mutex_robustness = 0;
-pub const PTHREAD_MUTEX_ROBUST: __pthread_mutex_robustness = 256;
 
+pub const PTHREAD_MUTEX_ROBUST: __pthread_mutex_robustness = 256;
 pub const RLIMIT_CPU: crate::__rlimit_resource_t = 0;
+
 pub const RLIMIT_FSIZE: crate::__rlimit_resource_t = 1;
 pub const RLIMIT_DATA: crate::__rlimit_resource_t = 2;
 pub const RLIMIT_STACK: crate::__rlimit_resource_t = 3;
@@ -3609,27 +3787,27 @@ pub const RLIMIT_AS: crate::__rlimit_resource_t = 10;
 pub const RLIMIT_VMEM: crate::__rlimit_resource_t = 10;
 pub const RLIMIT_NLIMITS: crate::__rlimit_resource_t = 11;
 pub const RLIM_NLIMITS: crate::__rlimit_resource_t = 11;
-
 pub const RUSAGE_SELF: __rusage_who = 0;
-pub const RUSAGE_CHILDREN: __rusage_who = -1;
 
+pub const RUSAGE_CHILDREN: __rusage_who = -1;
 pub const PRIO_PROCESS: __priority_which = 0;
+
 pub const PRIO_PGRP: __priority_which = 1;
 pub const PRIO_USER: __priority_which = 2;
-
 pub const __UT_LINESIZE: usize = 32;
+
 pub const __UT_NAMESIZE: usize = 32;
 pub const __UT_HOSTSIZE: usize = 256;
-
 pub const SOCK_STREAM: c_int = 1;
+
 pub const SOCK_DGRAM: c_int = 2;
 pub const SOCK_RAW: c_int = 3;
 pub const SOCK_RDM: c_int = 4;
 pub const SOCK_SEQPACKET: c_int = 5;
 pub const SOCK_CLOEXEC: c_int = 4194304;
 pub const SOCK_NONBLOCK: c_int = 2048;
-
 pub const MSG_OOB: c_int = 1;
+
 pub const MSG_PEEK: c_int = 2;
 pub const MSG_DONTROUTE: c_int = 4;
 pub const MSG_EOR: c_int = 8;
@@ -3639,12 +3817,12 @@ pub const MSG_WAITALL: c_int = 64;
 pub const MSG_DONTWAIT: c_int = 128;
 pub const MSG_NOSIGNAL: c_int = 1024;
 pub const MSG_CMSG_CLOEXEC: c_int = 0x40000000;
-
 pub const SCM_RIGHTS: c_int = 1;
+
 pub const SCM_TIMESTAMP: c_int = 2;
 pub const SCM_CREDS: c_int = 3;
-
 pub const SO_DEBUG: c_int = 1;
+
 pub const SO_ACCEPTCONN: c_int = 2;
 pub const SO_REUSEADDR: c_int = 4;
 pub const SO_KEEPALIVE: c_int = 8;
@@ -3654,6 +3832,7 @@ pub const SO_USELOOPBACK: c_int = 64;
 pub const SO_LINGER: c_int = 128;
 pub const SO_OOBINLINE: c_int = 256;
 pub const SO_REUSEPORT: c_int = 512;
+pub const SO_TIMESTAMP: c_int = 1024;
 pub const SO_SNDBUF: c_int = 4097;
 pub const SO_RCVBUF: c_int = 4098;
 pub const SO_SNDLOWAT: c_int = 4099;
