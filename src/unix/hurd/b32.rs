@@ -15,14 +15,7 @@ pub type __u_quad_t = c_ulonglong;
 pub type __intmax_t = c_longlong;
 pub type __uintmax_t = c_ulonglong;
 
-pub type __squad_type = __int64_t;
-pub type __uquad_type = __uint64_t;
-pub type __sword_type = c_int;
-pub type __uword_type = c_uint;
-pub type __slong32_type = c_long;
-pub type __ulong32_type = c_ulong;
-pub type __s64_type = __int64_t;
-pub type __u64_type = __uint64_t;
+pub type __time64_t = __int64_t;
 
 pub type __ipc_pid_t = c_ushort;
 
@@ -136,6 +129,10 @@ s! {
         pub mode: c_ushort,
         pub __seq: c_ushort,
     }
+
+    pub struct fd_set {
+        pub fds_bits: [crate::__fd_mask; 8],
+    }
 }
 
 s_no_extra_traits! {
@@ -170,6 +167,48 @@ cfg_if! {
     }
 }
 
-// bits/ioctls.h
+// sys/ucontext.h
+pub const REG_GS: c_uint = 0;
+pub const REG_FS: c_uint = 1;
+pub const REG_ES: c_uint = 2;
+pub const REG_DS: c_uint = 3;
+pub const REG_EDI: c_uint = 4;
+pub const REG_ESI: c_uint = 5;
+pub const REG_EBP: c_uint = 6;
+pub const REG_ESP: c_uint = 7;
+pub const REG_EBX: c_uint = 8;
+pub const REG_EDX: c_uint = 9;
+pub const REG_ECX: c_uint = 10;
+pub const REG_EAX: c_uint = 11;
+pub const REG_TRAPNO: c_uint = 12;
+pub const REG_ERR: c_uint = 13;
+pub const REG_EIP: c_uint = 14;
+pub const REG_CS: c_uint = 15;
+pub const REG_EFL: c_uint = 16;
+pub const REG_UESP: c_uint = 17;
+pub const REG_SS: c_uint = 18;
+
+// stdint.h
+pub const INTPTR_WIDTH: usize = 32;
+pub const UINTPTR_WIDTH: usize = 32;
+pub const PTRDIFF_WIDTH: usize = 32;
+pub const SIZE_WIDTH: usize = 32;
+
+// stdint.h (word-sized on this ABI)
+pub const INT_FAST16_WIDTH: usize = 32;
+pub const UINT_FAST16_WIDTH: usize = 32;
+pub const INT_FAST32_WIDTH: usize = 32;
+pub const UINT_FAST32_WIDTH: usize = 32;
+
+// bits/pthreadtypes-arch.h, sys/ucontext.h
+pub const __SIZEOF_PTHREAD_ATTR_T: usize = 32;
+pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 28;
+pub const __SIZEOF_PTHREAD_BARRIER_T: usize = 24;
+pub const __SIZEOF_PTHREAD_COND_T: usize = 20;
+pub const __NGREG: usize = 19;
+pub const NGREG: usize = 19;
+
+// bits/ioctls.h, bits/dl_find_object.h
 pub const OSIOCGIFCONF: c_ulong = 0xf0080194;
 pub const SIOCGIFCONF: c_ulong = 0xf00801a4;
+pub const DLFO_STRUCT_HAS_EH_DBASE: usize = 1;
